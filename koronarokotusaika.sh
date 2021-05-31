@@ -14,13 +14,13 @@ API_URL="https://api.koronarokotusaika.fi/api/options/municipalities/"
 
 # Test the inputs...
 if [ "$#" -ne 2 ]; then
-  echo -e "\nUsage: $0 Municipality Age\n"
+  echo -e "\nUsage: $0 Municipality Birthyear\n"
   exit 1
 fi
 
 if [ -n "$2" ] && [ "$2" -eq "$2" ] 2>/dev/null; then
   MUNICIPALITY=$1
-  AGE=$2
+  BYEAR=2021-$2
 else
   echo -e "\nAge should be a number!\n"
   exit 1
@@ -60,7 +60,9 @@ if [ -z "$LABEL" ]; then
 fi
 
 # Check the non-risk groups based on the age...
-ELIGIBLE_SINCE=$(echo "$LABEL" | jq -c '.vaccinationGroups[] | select((.min<='$AGE') and (.max>='$AGE' or .max==null) and (.conditionTextKey==null) and (.startDate!=null)) | "\(.startDate) (ages \(.min)-\(.max), source \(.source))"' )
+ELIGIBLE_SINCE=$(echo "$LABEL" | jq -c '.vaccinationGroups[] | select((.min<='$BYEAR') and (.max>='$BYEAR' or .max==null) and (.conditionTextKey==null) and (.startDate!=null)) | "\(.startDate) (ages \(.min)-\(.max), source \(.source))"' )
+CURRENT_TIME=$(date --iso-8601=seconds)
+echo -e "\n[$CURRENT_TIME]"
 
 if [ -z "$ELIGIBLE_SINCE" ]; then
   echo -e "\nSorry, but $AGE years old from $MUNICIPALITY are not yet eligible for Covid-19 vaccination! :(\n"
