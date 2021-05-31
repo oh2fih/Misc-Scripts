@@ -53,10 +53,10 @@ else
 fi
 
 # Get the data for the municipality...
-LABEL=$(cat "$CACHE_FILE" | jq -c '.[] | select(.label=="'$MUNICIPALITY'")' )
+LABEL=$(cat "$CACHE_FILE" | jq -c '.[] | select(.label=="'"$MUNICIPALITY"'")' )
 
 if [ -z "$LABEL" ]; then
-  MUNICIPALITIES=$(cat "$CACHE_FILE"|jq -c -r '.[] | .label')
+  MUNICIPALITIES=$(cat "$CACHE_FILE"|jq -c '.[] | .label')
   echo -e "\nMunicipality "$MUNICIPALITY" not found! Try one of:\n\n$MUNICIPALITIES\n"
   exit 1
 fi
