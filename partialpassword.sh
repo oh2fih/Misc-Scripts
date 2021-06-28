@@ -1,7 +1,7 @@
 #!/bin/bash
 # -----------------------------------------------------------
 # Creates a new wordlist from a wordlist by replacing all
-# ambigous characters with all their possible combinations.
+# ambiguous characters with all their possible combinations.
 #
 # Usage: partialpassword.sh input.txt output.txt O0 [Il1 ...]
 # -----------------------------------------------------------
