@@ -46,3 +46,6 @@ for alternatives in "${@:3}"; do
   done
 
 done
+
+# Remove empty lines.
+sed -i '/^$/d' $2
