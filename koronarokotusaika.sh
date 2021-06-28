@@ -27,6 +27,11 @@ else
   exit 1
 fi
 
+if [ $AGE -gt 118 ]; then
+  echo -e "\nI bet you are not turning $AGE this year! That would beat even Kane Tanaka!\n"
+  exit 1
+fi
+
 # Tests for the requirements...
 if ! command -v jq &> /dev/null; then
   echo -e "\nThis script requires jq!\n"
