@@ -38,7 +38,7 @@ for alternatives in "${@:3}"; do
     for (( j=1; j<=$max; j++ )); do
       for (( k=$max; k>=j; k-- )); do
         new=$(sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k"" $2)
-        echo -e "$new" >> $2
+        echo -e "\n$new" >> $2
         uniq=$(cat $2 | sort -u)
         echo -e "$uniq" > $2
       done
