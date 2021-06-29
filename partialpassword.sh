@@ -40,7 +40,6 @@ for alternatives in "${@:3}"; do
     for (( j=1; j<=$max; j++ )); do
       for (( k=$max; k>=j; k-- )); do
         new=$(echo -e "$pwlist" | sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k"")
-        #echo -e "\n$new" >> $2
         pwlist=$(echo -e "$pwlist\n$new" | sort -u | sed '/^$/d')
       done
     done
