@@ -21,31 +21,32 @@ if ! command -v awk &> /dev/null; then
   exit 1
 fi
 
-cp $1 $2 || { echo -e '\nCannot write output to '$2'\n' ; exit 1; }
+cp $1 $2 || { echo -e '\nProblem with reading the input or writing the output.\n' ; exit 1; }
+
+pwlist=$(cat "$2")
 
 for alternatives in "${@:3}"; do
 
   # First, replace all other characters with the first one.
   for (( i=1; i<${#alternatives}; i++ )); do
-    sed -i 's/'${alternatives:$i:1}'/'${alternatives:0:1}'/g' $2
+    pwlist=$(echo -e "$pwlist" | sed 's/'${alternatives:$i:1}'/'${alternatives:0:1}'/g')
   done
 
   # Get max number of characters to be replaced.
-  max=$(sed 's/[^'$alternatives']//g' $1 | awk '{ print length }' | sort -n | tail -n 1)
+  max=$(echo -e "$pwlist" | sed 's/[^'$alternatives']//g' | awk '{ print length }' | sort -n | tail -n 1)
 
-  # Add new combinations to the file.
+  # Add new combinations
   for (( i=1; i<${#alternatives}; i++ )); do
     for (( j=1; j<=$max; j++ )); do
       for (( k=$max; k>=j; k-- )); do
-        new=$(sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k"" $2)
-        echo -e "\n$new" >> $2
-        uniq=$(cat $2 | sort -u)
-        echo -e "$uniq" > $2
+        new=$(echo -e "$pwlist" | sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k"")
+        #echo -e "\n$new" >> $2
+        pwlist=$(echo -e "$pwlist\n$new" | sort -u | sed '/^$/d')
       done
     done
   done
 
 done
 
-# Remove empty lines.
-sed -i '/^$/d' $2
+# Save the file
+echo -e "$pwlist" > $2
