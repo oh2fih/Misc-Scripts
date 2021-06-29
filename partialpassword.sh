@@ -21,9 +21,7 @@ if ! command -v awk &> /dev/null; then
   exit 1
 fi
 
-cp $1 $2 || { echo -e '\nProblem with reading the input or writing the output.\n' ; exit 1; }
-
-pwlist=$(cat "$2")
+pwlist=$(cat "$1") || exit 1
 
 for alternatives in "${@:3}"; do
 
@@ -48,4 +46,5 @@ for alternatives in "${@:3}"; do
 done
 
 # Save the file
-echo -e "$pwlist" > $2
+echo -e "$pwlist" > $2 || exit 1
+echo -e "\nDone.\n"
