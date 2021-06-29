@@ -21,6 +21,14 @@ if ! command -v awk &> /dev/null; then
   exit 1
 fi
 
+if [ -f "$2" ]; then
+  echo -e "\n$2 already exists.\n"
+  read -p "Overwrite? (y/N) " answer
+  if [ "${answer,,}" != "y" ]; then
+    exit 1
+  fi
+fi
+
 pwlist=$(cat "$1") || exit 1
 
 for alternatives in "${@:3}"; do
