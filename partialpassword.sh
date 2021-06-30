@@ -5,12 +5,14 @@
 #
 # Usage: partialpassword.sh input.txt output.txt O0 [Il1 ...]
 #
-# Using "--" as the output prints the list to stdout.
+# Using "-" as the input reads the passwords from stdin.
+# Using "-" as the output prints the password list to stdout.
 # -----------------------------------------------------------
 
 if [ "$#" -lt 3 ]; then
   echo -e "\nUsage: $0 input.txt output.txt O0 [Il1 ...]\n"
-  echo -e "Using \"--\" as the output prints the list to stdout.\n"
+  echo -e "Using \"-\" as the input reads the passwords from stdin."
+  echo -e "Using \"-\" as the output prints the password list to stdout.\n"
   exit 1
 fi
 
@@ -24,7 +26,7 @@ if ! command -v awk &> /dev/null; then
   exit 1
 fi
 
-if [ "$2" != "--" ]; then
+if [ "$2" != "-" ]; then
   if [ -f "$2" ]; then
     echo -e "\n$2 already exists.\n"
     read -p "Overwrite? (y/N) " answer
@@ -59,7 +61,7 @@ for alternatives in "${@:3}"; do
 done
 
 # Save the file or print the output to stdout.
-if [ "$2" = "--" ]; then
+if [ "$2" = "-" ]; then
   echo -e "$pwlist"
 else
   echo -e "$pwlist" > $2 || exit 1
