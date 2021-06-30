@@ -31,7 +31,9 @@ fi
 if [ "$2" != "-" ]; then
   if [ -f "$2" ]; then
     printf "\n%s %s\n" "$2" "already exists."
-    if [ "$1" != "-" ]; then
+    if [ "$1" = "-" ]; then
+      exit 1
+    else
       read -p "Overwrite? (y/N) " answer
       if [ "${answer,,}" != "y" ]; then
         exit 1
@@ -67,8 +69,8 @@ done
 
 # Save the file or print the output to stdout.
 if [ "$2" = "-" ]; then
-  printf "%s" "$pwlist"
+  printf "%s\n" "$pwlist"
 else
-  printf "%s" "$pwlist" > $2 || exit 1
+  printf "%s\n" "$pwlist" > $2 || exit 1
   printf "\n%s\n" "Done."
 fi
