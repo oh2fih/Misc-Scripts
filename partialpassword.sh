@@ -41,7 +41,7 @@ if [ "$2" != "-" ]; then
 fi
 
 # Read file or stdin.
-pwlist=$(< "$1") || exit 1
+pwlist=$(cat "$1") || exit 1
 
 for alternatives in "${@:3}"; do
 
