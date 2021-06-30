@@ -7,6 +7,8 @@
 #
 # Using "-" as the input reads the passwords from stdin.
 # Using "-" as the output prints the password list to stdout.
+#
+# Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
 
 if [ "$#" -lt 3 ]; then
