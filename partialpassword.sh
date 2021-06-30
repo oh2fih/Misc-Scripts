@@ -12,28 +12,30 @@
 # -----------------------------------------------------------
 
 if [ "$#" -lt 3 ]; then
-  echo -e "\nUsage: $0 input.txt output.txt O0 [Il1 ...]\n"
-  echo -e "Using \"-\" as the input reads the passwords from stdin."
-  echo -e "Using \"-\" as the output prints the password list to stdout.\n"
+  printf "\n%s\n" "Usage: $0 input.txt output.txt O0 [Il1 ...]"
+  printf "\n%s\n" "Using \"-\" as the input reads the passwords from stdin."
+  printf "%s\n" "Using \"-\" as the output prints the password list to stdout."
   exit 1
 fi
 
 if ! command -v sed &> /dev/null; then
-  echo -e "\nThis script requires sed!\n"
+  printf "\n%s\n" "This script requires sed!"
   exit 1
 fi
 
 if ! command -v awk &> /dev/null; then
-  echo -e "\nThis script requires awk!\n"
+  printf "\n%s\n" "This script requires awk!"
   exit 1
 fi
 
 if [ "$2" != "-" ]; then
   if [ -f "$2" ]; then
-    echo -e "\n$2 already exists.\n"
-    read -p "Overwrite? (y/N) " answer
-    if [ "${answer,,}" != "y" ]; then
-      exit 1
+    printf "\n%s %s\n" "$2" "already exists."
+    if [ "$1" != "-" ]; then
+      read -p "Overwrite? (y/N) " answer
+      if [ "${answer,,}" != "y" ]; then
+        exit 1
+      fi
     fi
   fi
 fi
@@ -44,18 +46,18 @@ for alternatives in "${@:3}"; do
 
   # First, replace all other characters with the first one.
   for (( i=1; i<${#alternatives}; i++ )); do
-    pwlist=$(echo -e "$pwlist" | sed 's/'${alternatives:$i:1}'/'${alternatives:0:1}'/g')
+    pwlist=$(printf "%s" "$pwlist" | sed 's/'${alternatives:$i:1}'/'${alternatives:0:1}'/g')
   done
 
   # Get max number of characters to be replaced.
-  max=$(echo -e "$pwlist" | sed 's/[^'$alternatives']//g' | awk '{ print length }' | sort -n | tail -n 1)
+  max=$(printf "%s" "$pwlist" | sed 's/[^'$alternatives']//g' | awk '{ print length }' | sort -n | tail -n 1)
 
   # Add new combinations.
   for (( i=1; i<${#alternatives}; i++ )); do
     for (( j=1; j<=$max; j++ )); do
       for (( k=$max; k>=j; k-- )); do
-        new=$(echo -e "$pwlist" | sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k"")
-        pwlist=$(echo -e "$pwlist\n$new" | sort -u | sed '/^$/d')
+        new=$(printf "%s" "$pwlist" | sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k"")
+        pwlist=$(printf "%s\n%s" "$pwlist" "$new" | sort -u)
       done
     done
   done
@@ -64,8 +66,8 @@ done
 
 # Save the file or print the output to stdout.
 if [ "$2" = "-" ]; then
-  echo -e "$pwlist"
+  printf "%s" "$pwlist"
 else
-  echo -e "$pwlist" > $2 || exit 1
-  echo -e "\nDone.\n"
+  printf "%s" "$pwlist" > $2 || exit 1
+  printf "\n%s\n" "Done."
 fi
