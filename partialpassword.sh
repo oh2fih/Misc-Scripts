@@ -40,7 +40,8 @@ if [ "$2" != "-" ]; then
   fi
 fi
 
-pwlist=$(cat "$1") || exit 1
+# Read file or stdin.
+pwlist=$(< "$1") || exit 1
 
 for alternatives in "${@:3}"; do
 
