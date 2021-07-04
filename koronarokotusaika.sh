@@ -14,7 +14,7 @@ API_URL="https://api.koronarokotusaika.fi/api/options/municipalities/"
 
 # Test the inputs...
 if [ "$#" -ne 2 ]; then
-  echo -e "\nUsage: $0 Municipality YearOfBirth\n" >&2
+  printf "\n%s\n\n" "Usage: $0 Municipality YearOfBirth" >&2
   exit 1
 fi
 
@@ -23,24 +23,24 @@ if [ -n "$2" ] && [ "$2" -eq "$2" ] 2>/dev/null; then
   BYEAR=$2
   AGE=$(($(date +"%Y")-$BYEAR))
 else
-  echo -e "\nYear of birth should be a number!\n" >&2
+  printf "\n%s\n\n" "Year of birth should be a number!" >&2
   exit 1
 fi
 
 if [ $AGE -gt 118 ]; then
-  echo -e "\nI bet you are not turning $AGE this year!"
-  echo -e "That would beat even Kane Tanaka!\n" >&2
+  printf "\n%s" "I bet you are not turning $AGE this year! " >&2
+  printf "%s\n\n" "That would beat even Kane Tanaka!" >&2
   exit 1
 fi
 
 # Tests for the requirements...
 if ! command -v jq &> /dev/null; then
-  echo -e "\nThis script requires jq!\n" >&2
+  printf "\n%s\n\n" "This script requires jq!" >&2
   exit 1
 fi
 
 if ! command -v curl &> /dev/null; then
-  echo -e "\nThis script requires curl!\n" >&2
+  printf "\n%s\n\n" "This script requires curl!" >&2
   exit 1
 fi
 
@@ -52,10 +52,10 @@ else
 fi
 
 if [ $CACHE_TIME -le $(( `date +%s` - $CACHE_MAX_SECONDS )) ]; then 
-  echo -e "\nDownloading fresh data @ "$(date -Iseconds)
+  printf "\n%s\n" "Downloading fresh data @ "$(date -Iseconds)
   curl -s "$API_URL" -o "$CACHE_FILE"
 else
-  echo -e "\nUsing data cached @ "$(date -Iseconds -d @$CACHE_TIME)
+  printf "\n%s\n" "Using data cached @ "$(date -Iseconds -d @$CACHE_TIME)
 fi
 
 # Get the data for the municipality...
@@ -63,14 +63,14 @@ LABEL=$(cat "$CACHE_FILE" | jq -c '.[] | select(.label=="'"$MUNICIPALITY"'")' )
 
 if [ -z "$LABEL" ]; then
   MUNICIPALITIES=$(cat "$CACHE_FILE" | jq -c '.[] | .label')
-  echo -e "\nMunicipality "$MUNICIPALITY" not found! Try one of:\n" >&2
-  echo -e "\n$MUNICIPALITIES\n" >&2
+  printf "\n%s\n" "Municipality \""$MUNICIPALITY"\" not found! Try one of:" >&2
+  printf "\n%s\n\n" "$MUNICIPALITIES" >&2
   exit 1
 fi
 
 # Check the non-risk groups based on the age...
 ELIGIBLE_SINCE=$(
-  echo "$LABEL" \
+  printf "%s" "$LABEL" \
     | jq -c '.vaccinationGroups[]
       | select((.min<='$AGE')
         and (.max>='$AGE' or .max==null)
@@ -80,14 +80,14 @@ ELIGIBLE_SINCE=$(
   )
 
 if [ -z "$ELIGIBLE_SINCE" ]; then
-  echo -e "\nSorry, but people from $MUNICIPALITY"
-  echo -e "born in $BYEAR (turning $AGE this year)"
-  echo -e "are not yet eligible for Covid-19 vaccination! :(\n"
+  printf "\n%s" "Sorry, but people from $MUNICIPALITY "
+  printf "%s" "born in $BYEAR (turning $AGE this year) "
+  printf "%s\n\n" "are not yet eligible for Covid-19 vaccination! :("
   exit 0
 else
-  echo -e "\nCongratulations! People from $MUNICIPALITY"
-  echo -e "born in $BYEAR (turning $AGE this year)"
-  echo -e "have been eligible for Covid-19 vaccination since"
-  echo -e "$ELIGIBLE_SINCE\n"
+  printf "\n%s" "Congratulations! People from $MUNICIPALITY "
+  printf "%s" "born in $BYEAR (turning $AGE this year) "
+  printf "%s" "have been eligible for Covid-19 vaccination since"
+  printf "\n%s\n\n" "$ELIGIBLE_SINCE"
   exit 0
 fi
