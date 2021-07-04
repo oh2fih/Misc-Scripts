@@ -12,25 +12,25 @@
 # -----------------------------------------------------------
 
 if [ "$#" -lt 3 ]; then
-  printf "\n%s\n" "Usage: $0 input.txt output.txt O0 [Il1 ...]"
-  printf "\n%s\n" "Using \"-\" as the input reads the passwords from stdin."
-  printf "%s\n" "Using \"-\" as the output prints the password list to stdout."
+  printf "\n%s\n" "Usage: $0 input.txt output.txt O0 [Il1 ...]" >&2
+  printf "\n%s\n" "Using \"-\" as the input reads the passwords from stdin." >&2
+  printf "%s\n" "Using \"-\" as the output prints the password list to stdout." >&2
   exit 1
 fi
 
 if ! command -v sed &> /dev/null; then
-  printf "\n%s\n" "This script requires sed!"
+  printf "\n%s\n" "This script requires sed!" >&2
   exit 1
 fi
 
 if ! command -v awk &> /dev/null; then
-  printf "\n%s\n" "This script requires awk!"
+  printf "\n%s\n" "This script requires awk!" >&2
   exit 1
 fi
 
 if [ "$2" != "-" ]; then
   if [ -f "$2" ]; then
-    printf "\n%s %s\n" "$2" "already exists."
+    printf "\n%s %s\n" "$2" "already exists." >&2
     if [ "$1" = "-" ]; then
       exit 1
     else
