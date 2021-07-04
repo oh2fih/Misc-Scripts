@@ -61,13 +61,17 @@ fi
 LABEL=$(cat "$CACHE_FILE" | jq -c '.[] | select(.label=="'"$MUNICIPALITY"'")' )
 
 if [ -z "$LABEL" ]; then
-  MUNICIPALITIES=$(cat "$CACHE_FILE"|jq -c '.[] | .label')
-  echo -e "\nMunicipality "$MUNICIPALITY" not found! Try one of:\n\n$MUNICIPALITIES\n" >&2
+  MUNICIPALITIES=$(cat "$CACHE_FILE" | jq -c '.[] | .label')
+  echo -e "\nMunicipality "$MUNICIPALITY" not found! Try one of:\n" >&2
+  echo -e "\n$MUNICIPALITIES\n" >&2
   exit 1
 fi
 
 # Check the non-risk groups based on the age...
-ELIGIBLE_SINCE=$(echo "$LABEL" | jq -c '.vaccinationGroups[] | select((.min<='$AGE') and (.max>='$AGE' or .max==null) and (.conditionTextKey==null) and (.startDate!=null)) | "\(.startDate) (ages \(.min)-\(.max), source \(.source))"' )
+ELIGIBLE_SINCE=$(
+  echo "$LABEL" \
+  | jq -c '.vaccinationGroups[] \| select((.min<='$AGE') and (.max>='$AGE' or .max==null) and (.conditionTextKey==null) and (.startDate!=null)) | "\(.startDate) (ages \(.min)-\(.max), source \(.source))"'
+)
 
 if [ -z "$ELIGIBLE_SINCE" ]; then
   echo -e "\nSorry, but people from $MUNICIPALITY born in $BYEAR (turning $AGE this year) are not yet eligible for Covid-19 vaccination! :(\n"
