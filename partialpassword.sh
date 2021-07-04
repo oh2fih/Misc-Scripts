@@ -49,17 +49,29 @@ for alternatives in "${@:3}"; do
 
   # First, replace all other characters with the first one.
   for (( i=1; i<${#alternatives}; i++ )); do
-    pwlist=$(printf "%s" "$pwlist" | sed 's/'${alternatives:$i:1}'/'${alternatives:0:1}'/g')
+    pwlist=$(
+      printf "%s" "$pwlist" \
+      | sed 's/'${alternatives:$i:1}'/'${alternatives:0:1}'/g'
+    )
   done
 
   # Get max number of characters to be replaced.
-  max=$(printf "%s" "$pwlist" | sed 's/[^'$alternatives']//g' | awk '{ print length }' | sort -n | tail -n 1)
+  max=$(
+    printf "%s" "$pwlist" \
+    | sed 's/[^'$alternatives']//g' \
+    | awk '{ print length }' \
+    | sort -n \
+    | tail -n 1
+  )
 
   # Add new combinations.
   for (( i=1; i<${#alternatives}; i++ )); do
     for (( j=1; j<=$max; j++ )); do
       for (( k=$max; k>=j; k-- )); do
-        new=$(printf "%s" "$pwlist" | sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k"")
+        new=$(
+          printf "%s" "$pwlist" \
+          | sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k""
+        )
         pwlist=$(printf "%s\n%s" "$pwlist" "$new" | sort -u)
       done
     done
