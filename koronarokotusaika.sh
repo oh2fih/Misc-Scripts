@@ -70,7 +70,7 @@ fi
 # Check the non-risk groups based on the age...
 ELIGIBLE_SINCE=$(
   echo "$LABEL" \
-  | jq -c '.vaccinationGroups[] \| select((.min<='$AGE') and (.max>='$AGE' or .max==null) and (.conditionTextKey==null) and (.startDate!=null)) | "\(.startDate) (ages \(.min)-\(.max), source \(.source))"'
+  | jq -c '.vaccinationGroups[] | select((.min<='$AGE') and (.max>='$AGE' or .max==null) and (.conditionTextKey==null) and (.startDate!=null)) | "\(.startDate) (ages \(.min)-\(.max), source \(.source))"'
 )
 
 if [ -z "$ELIGIBLE_SINCE" ]; then
