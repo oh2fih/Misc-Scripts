@@ -14,7 +14,7 @@ API_URL="https://api.koronarokotusaika.fi/api/options/municipalities/"
 
 # Test the inputs...
 if [ "$#" -ne 2 ]; then
-  echo -e "\nUsage: $0 Municipality YearOfBirth\n"
+  echo -e "\nUsage: $0 Municipality YearOfBirth\n" >&2
   exit 1
 fi
 
@@ -23,23 +23,23 @@ if [ -n "$2" ] && [ "$2" -eq "$2" ] 2>/dev/null; then
   BYEAR=$2
   AGE=$(($(date +"%Y")-$BYEAR))
 else
-  echo -e "\nYear of birth should be a number!\n"
+  echo -e "\nYear of birth should be a number!\n" >&2
   exit 1
 fi
 
 if [ $AGE -gt 118 ]; then
-  echo -e "\nI bet you are not turning $AGE this year! That would beat even Kane Tanaka!\n"
+  echo -e "\nI bet you are not turning $AGE this year! That would beat even Kane Tanaka!\n" >&2
   exit 1
 fi
 
 # Tests for the requirements...
 if ! command -v jq &> /dev/null; then
-  echo -e "\nThis script requires jq!\n"
+  echo -e "\nThis script requires jq!\n" >&2
   exit 1
 fi
 
 if ! command -v curl &> /dev/null; then
-  echo -e "\nThis script requires curl!\n"
+  echo -e "\nThis script requires curl!\n" >&2
   exit 1
 fi
 
@@ -62,7 +62,7 @@ LABEL=$(cat "$CACHE_FILE" | jq -c '.[] | select(.label=="'"$MUNICIPALITY"'")' )
 
 if [ -z "$LABEL" ]; then
   MUNICIPALITIES=$(cat "$CACHE_FILE"|jq -c '.[] | .label')
-  echo -e "\nMunicipality "$MUNICIPALITY" not found! Try one of:\n\n$MUNICIPALITIES\n"
+  echo -e "\nMunicipality "$MUNICIPALITY" not found! Try one of:\n\n$MUNICIPALITIES\n" >&2
   exit 1
 fi
 
