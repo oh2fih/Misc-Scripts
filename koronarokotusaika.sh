@@ -28,7 +28,8 @@ else
 fi
 
 if [ $AGE -gt 118 ]; then
-  echo -e "\nI bet you are not turning $AGE this year! That would beat even Kane Tanaka!\n" >&2
+  echo -e "\nI bet you are not turning $AGE this year!"
+  echo -e "That would beat even Kane Tanaka!\n" >&2
   exit 1
 fi
 
@@ -70,14 +71,23 @@ fi
 # Check the non-risk groups based on the age...
 ELIGIBLE_SINCE=$(
   echo "$LABEL" \
-  | jq -c '.vaccinationGroups[] | select((.min<='$AGE') and (.max>='$AGE' or .max==null) and (.conditionTextKey==null) and (.startDate!=null)) | "\(.startDate) (ages \(.min)-\(.max), source \(.source))"'
-)
+    | jq -c '.vaccinationGroups[]
+      | select((.min<='$AGE')
+        and (.max>='$AGE' or .max==null)
+        and (.conditionTextKey==null)
+        and (.startDate!=null)) 
+      | "\(.startDate) (ages \(.min)-\(.max), source \(.source))"'
+  )
 
 if [ -z "$ELIGIBLE_SINCE" ]; then
-  echo -e "\nSorry, but people from $MUNICIPALITY born in $BYEAR (turning $AGE this year) are not yet eligible for Covid-19 vaccination! :(\n"
+  echo -e "\nSorry, but people from $MUNICIPALITY"
+  echo -e "born in $BYEAR (turning $AGE this year)"
+  echo -e "are not yet eligible for Covid-19 vaccination! :(\n"
   exit 0
 else
-  echo -e "\nCongratulations! People from $MUNICIPALITY born in $BYEAR (turning $AGE this year) have been eligible for Covid-19 vaccination since"
+  echo -e "\nCongratulations! People from $MUNICIPALITY"
+  echo -e "born in $BYEAR (turning $AGE this year)"
+  echo -e "have been eligible for Covid-19 vaccination since"
   echo -e "$ELIGIBLE_SINCE\n"
   exit 0
 fi

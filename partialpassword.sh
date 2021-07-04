@@ -6,7 +6,7 @@
 # Usage: partialpassword.sh input.txt output.txt O0 [Il1 ...]
 #
 # Using "-" as the input reads the passwords from stdin.
-# Using "-" as the output prints the password list to stdout.
+# Using "-" as the output prints the wordlist to stdout.
 #
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
@@ -14,7 +14,7 @@
 if [ "$#" -lt 3 ]; then
   printf "\n%s\n" "Usage: $0 input.txt output.txt O0 [Il1 ...]" >&2
   printf "\n%s\n" "Using \"-\" as the input reads the passwords from stdin." >&2
-  printf "%s\n" "Using \"-\" as the output prints the password list to stdout." >&2
+  printf "%s\n" "Using \"-\" as the output prints the wordlist to stdout." >&2
   exit 1
 fi
 
@@ -51,18 +51,18 @@ for alternatives in "${@:3}"; do
   for (( i=1; i<${#alternatives}; i++ )); do
     pwlist=$(
       printf "%s" "$pwlist" \
-      | sed 's/'${alternatives:$i:1}'/'${alternatives:0:1}'/g'
-    )
+        | sed 's/'${alternatives:$i:1}'/'${alternatives:0:1}'/g'
+      )
   done
 
   # Get max number of characters to be replaced.
   max=$(
     printf "%s" "$pwlist" \
-    | sed 's/[^'$alternatives']//g' \
-    | awk '{ print length }' \
-    | sort -n \
-    | tail -n 1
-  )
+      | sed 's/[^'$alternatives']//g' \
+      | awk '{ print length }' \
+      | sort -n \
+      | tail -n 1
+    )
 
   # Add new combinations.
   for (( i=1; i<${#alternatives}; i++ )); do
@@ -70,8 +70,8 @@ for alternatives in "${@:3}"; do
       for (( k=$max; k>=j; k-- )); do
         new=$(
           printf "%s" "$pwlist" \
-          | sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k""
-        )
+            | sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k""
+          )
         pwlist=$(printf "%s\n%s" "$pwlist" "$new" | sort -u)
       done
     done
