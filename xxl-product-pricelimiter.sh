@@ -30,14 +30,16 @@ if [[ $producturl =~ $regex ]]; then
   # Download the page and get current price.
   productpage=$(curl --silent "$producturl")
 
-  productname=$(printf "%s" "$productpage" \
+  productname=$(
+    printf "%s" "$productpage" \
       | grep "data\-product\-name" \
       | head -n 1 \
       | grep -o '".*"' \
       | sed 's/"//g'
     )
 
-  productprice=$(printf "%s" "$productpage" \
+  productprice=$(
+    printf "%s" "$productpage" \
       | grep "data\-product\-price" \
       | grep -o '".*"' \
       | sed -e 's/[^0-9,\.]*//g' \
