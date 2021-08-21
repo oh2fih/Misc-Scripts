@@ -17,26 +17,30 @@ import validators
 def main(urllist):
     '''Causes the pages to be cached, gets them and prints the results as a table.'''
 
-    # Initial requests to cause Cache Enabler to cache the pages.
-    print ("Performing the initial request to cause uncached URLs to be cached...\n")
+    # Remove invalid URLs and adjust the output column to the longest URL
+    maxlength = 0
     for url in urllist:
         if validators.url(url):
-            try:
-                with urllib.request.urlopen(url) as response:
-                    page = response.read()
-            except:
-                pass
+            if len(url) > maxlength:
+                maxlength = len(url)
+        else:
+            urllist.remove(url)
 
-    # Get the pages again to check the status.
-    print ("{:<40} {:<40}".format("URL", "RESULT"))
+    if len(urllist) == 0:
+        usage()
+
+    print ("{:<{width}} {:<10}".format("URL", "RESULT", width=maxlength+3))
     for url in urllist:
-        if validators.url(url):
-            try:
-                with urllib.request.urlopen(url) as response:
-                    page = response.read()
-                    print ("{:<40} {:<40}".format(url, str(getCacheTime(page))))
-            except Exception as e:
-                print ("{:<40} {:<40}".format(url, str(e)))
+        try:
+            # Initial request to cause Cache Enabler to cache the page.
+            with urllib.request.urlopen(url) as response:
+                page = response.read()
+            # Get the cached page for processing.
+            with urllib.request.urlopen(url) as response:
+                page = response.read()
+                print ("{:<{width}} {:<10}".format(url, str(getCacheTime(page)), width=maxlength+3))
+        except Exception as e:
+            print ("{:<{width}} {:<10}".format(url, str(e), width=maxlength+3))
 
 def getCacheTime(page):
     '''Parses the cache time from the Cache Enabler comment on a HTML page.'''
@@ -46,8 +50,11 @@ def getCacheTime(page):
     except:
         return "Not cached."
 
+def usage():
+    print("Usage: test-cache-enabler.py https://example.com [...]")
+    exit(1)
+
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print("Usage: test-cache-enabler.py https://example.com [...]")
-        exit(1)
+        usage()
     main(sys.argv[1:])
