@@ -25,11 +25,10 @@ def main(urllist):
                 maxlength = len(url)
         else:
             urllist.remove(url)
-
     if len(urllist) == 0:
         usage()
 
-    print ("{:<{width}} {:<10}".format("URL", "RESULT", width=maxlength+3))
+    print ("\033[1m{:<{width}} {:<10}\033[0m".format("URL", "RESULT", width=maxlength+3))
     for url in urllist:
         try:
             # Initial request to cause Cache Enabler to cache the page.
@@ -40,15 +39,15 @@ def main(urllist):
                 page = response.read()
                 print ("{:<{width}} {:<10}".format(url, str(getCacheTime(page)), width=maxlength+3))
         except Exception as e:
-            print ("{:<{width}} {:<10}".format(url, str(e), width=maxlength+3))
+            print ("{:<{width}} \033[91m{:<10}\033[0m".format(url, str(e), width=maxlength+3))
 
 def getCacheTime(page):
     '''Parses the cache time from the Cache Enabler comment on a HTML page.'''
     try:
         cached = re.search(b'<!-- Cache Enabler by KeyCDN (.*) -->', page).group(1)
-        return cached.decode("utf-8")
+        return ('\033[92m' + cached.decode("utf-8") + '\033[0m')
     except:
-        return "Not cached."
+        return "\033[93mNot cached.\033[0m"
 
 def usage():
     print("Usage: test-cache-enabler.py https://example.com [...]")
