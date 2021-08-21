@@ -50,7 +50,7 @@ def getCacheTime(page):
         return "\033[93mNot cached.\033[0m"
 
 def usage():
-    print("Usage: test-cache-enabler.py https://example.com [...]")
+    print("Usage: " + sys.argv[0] + " https://example.com [...]")
     exit(1)
 
 if __name__ == "__main__":
