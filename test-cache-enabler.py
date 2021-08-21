@@ -12,10 +12,19 @@
 import sys
 import re
 import urllib.request
-import validators
+try:
+    import validators
+except ImportError:
+    class validators:
+        def url(url):
+            return True
 
 def main(urllist):
     '''Causes the pages to be cached, gets them and prints the results as a table.'''
+
+    if validators.url('invalid'):
+        print("\033[93mWarning! Python library 'validators' not found. Accepting anything as URL.\033[0m")
+        print("\033[93mTo get rid of this warning: 'pip3 install validators'\033[0m\n")
 
     # Remove invalid URLs and adjust the output column to the longest URL
     maxlength = 0
