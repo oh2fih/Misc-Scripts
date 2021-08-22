@@ -22,11 +22,8 @@ except ImportError:
 def main(urllist):
     '''Causes the pages to be cached, gets them and prints the results as a table.'''
 
-    if validators.url('invalid'):
-        print("\033[93mWarning! Python library 'validators' not found. Accepting anything as URL.\033[0m")
-        print("\033[93mTo get rid of this warning: 'pip3 install validators'\033[0m\n")
-
-    # Remove invalid URLs and adjust the output column to the longest URL
+    # Adjust the output column to the longest URL.
+    # Remove invalid URLs if optional 'validators' library is imported.
     maxlength = 0
     for url in urllist:
         if validators.url(url):
@@ -34,6 +31,7 @@ def main(urllist):
                 maxlength = len(url)
         else:
             urllist.remove(url)
+            print("\033[91mInvalid URL: " + url + "\033[0m\n")
     if len(urllist) == 0:
         usage()
 
