@@ -26,7 +26,7 @@ def main(urllist):
 
     # Adjust the output column to the longest URL.
     # Remove invalid URLs if optional 'validators' module is imported.
-    maxlength = 0
+    maxlength = 2
     invalid = []
     for url in urllist:
         if validators.url(url):
@@ -75,5 +75,5 @@ if __name__ == "__main__":
         urllist.extend(sys.argv[1:])
     if not sys.stdin.isatty():
         for line in sys.stdin:
-            urllist.append(line.strip('\n\r\t'))
+            urllist.append(line.strip(' \n\r\t'))
     main(urllist)
