@@ -13,6 +13,7 @@
 
 import sys
 import re
+import os
 import urllib.request
 try:
     import validators
@@ -23,6 +24,9 @@ except ImportError:
 
 def main(urllist):
     '''Causes the pages to be cached, gets them and prints the results as a table.'''
+
+    # Enable ANSI colors on Windows
+    os.system("color")
 
     # Strip whitespace and adjust the output column to the longest URL.
     # Remove invalid URLs if optional 'validators' module is imported.
