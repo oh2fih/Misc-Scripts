@@ -39,7 +39,8 @@ def main(urllist):
     if len(validurls) == 0:
         usage()
 
-    print("\n\033[1m{:<{width}} {:<10}\033[0m".format("URL", "RESULT", width=maxlength+2))
+    print("\n\033[1m", end="")
+    printResultLine("URL", "RESULT", maxlength, 1)
     for url in validurls:
         try:
             # Initial request to cause Cache Enabler to cache the page.
@@ -48,18 +49,28 @@ def main(urllist):
             # Get the cached page for processing.
             with urllib.request.urlopen(url) as response:
                 page = response.read()
-                print("{:<{width}} {:<10}".format(url, str(getCacheTime(page)), width=maxlength+2))
+                result = str(getCacheTime(page))
+                if result == "Not cached.":
+                    printResultLine(url, result, maxlength, 93)
+                else:
+                    printResultLine(url, result, maxlength, 92)
         except Exception as e:
-            print("{:<{width}} \033[91m{:<10}\033[0m".format(url, str(e), width=maxlength+2))
+            printResultLine(url, str(e), maxlength, 91)
     print()
 
 def getCacheTime(page):
     '''Parses the cache time from the Cache Enabler comment on a HTML page.'''
     try:
         cached = re.search(b'<!-- Cache Enabler by KeyCDN (.*) -->', page).group(1)
-        return ('\033[92m' + cached.decode("utf-8") + '\033[0m')
+        return (cached.decode("utf-8"))
     except:
-        return "\033[93mNot cached.\033[0m"
+        return "Not cached."
+
+def printResultLine(url, result, urlmaxlenght, SGR=0):
+    '''Prints table formatted result line & ANSI colors.'''
+    width = urlmaxlenght + 2
+    ansi = "\033[" + str(SGR) + "m"
+    print("{u:<{w}}{a}{r:<10}\033[0m".format(u=url, r=result, w=width, a=ansi))
 
 def usage():
     print("\nUsage: " + sys.argv[0] + " https://example.com [...]")
