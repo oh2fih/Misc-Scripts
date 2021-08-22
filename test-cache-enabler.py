@@ -31,7 +31,7 @@ def main(urllist):
                 maxlength = len(url)
         else:
             urllist.remove(url)
-            print("\033[91mInvalid URL: " + url + "\033[0m\n")
+            print("\033[91mInvalid URL: " + url + "\033[0m")
     if len(urllist) == 0:
         usage()
 
@@ -57,7 +57,7 @@ def getCacheTime(page):
         return "\033[93mNot cached.\033[0m"
 
 def usage():
-    print("Usage: " + sys.argv[0] + " https://example.com [...]")
+    print("\nUsage: " + sys.argv[0] + " https://example.com [...]")
     exit(1)
 
 if __name__ == "__main__":
