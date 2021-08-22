@@ -35,7 +35,7 @@ def main(urllist):
     if len(urllist) == 0:
         usage()
 
-    print ("\033[1m{:<{width}} {:<10}\033[0m".format("URL", "RESULT", width=maxlength+3))
+    print ("\033[1m{:<{width}} {:<10}\033[0m".format("URL", "RESULT", width=maxlength+2))
     for url in urllist:
         try:
             # Initial request to cause Cache Enabler to cache the page.
@@ -44,9 +44,9 @@ def main(urllist):
             # Get the cached page for processing.
             with urllib.request.urlopen(url) as response:
                 page = response.read()
-                print ("{:<{width}} {:<10}".format(url, str(getCacheTime(page)), width=maxlength+3))
+                print ("{:<{width}} {:<10}".format(url, str(getCacheTime(page)), width=maxlength+2))
         except Exception as e:
-            print ("{:<{width}} \033[91m{:<10}\033[0m".format(url, str(e), width=maxlength+3))
+            print ("{:<{width}} \033[91m{:<10}\033[0m".format(url, str(e), width=maxlength+2))
 
 def getCacheTime(page):
     '''Parses the cache time from the Cache Enabler comment on a HTML page.'''
