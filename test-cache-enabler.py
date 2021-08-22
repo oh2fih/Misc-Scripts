@@ -62,7 +62,7 @@ def getCacheTime(page):
     '''Parses the cache time from the Cache Enabler comment on a HTML page.'''
     try:
         cached = re.search(b'<!-- Cache Enabler by KeyCDN (.*) -->', page).group(1)
-        return (cached.decode("utf-8"))
+        return cached.decode("utf-8")
     except:
         return "Not cached."
 
