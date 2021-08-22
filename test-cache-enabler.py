@@ -23,19 +23,22 @@ def main(urllist):
     '''Causes the pages to be cached, gets them and prints the results as a table.'''
 
     # Adjust the output column to the longest URL.
-    # Remove invalid URLs if optional 'validators' library is imported.
+    # Remove invalid URLs if optional 'validators' module is imported.
     maxlength = 0
+    invalid = []
     for url in urllist:
         if validators.url(url):
             if len(url) > maxlength:
                 maxlength = len(url)
         else:
-            urllist.remove(url)
+            invalid.append(url)
             print("\033[91mInvalid URL: " + url + "\033[0m")
+    for url in invalid:
+        urllist.remove(url)
     if len(urllist) == 0:
         usage()
 
-    print ("\033[1m{:<{width}} {:<10}\033[0m".format("URL", "RESULT", width=maxlength+2))
+    print ("\n\033[1m{:<{width}} {:<10}\033[0m".format("URL", "RESULT", width=maxlength+2))
     for url in urllist:
         try:
             # Initial request to cause Cache Enabler to cache the page.
