@@ -24,7 +24,7 @@ except ImportError:
 def main(urllist):
     '''Causes the pages to be cached, gets them and prints the results as a table.'''
 
-    # Adjust the output column to the longest URL.
+    # Strip whitespace and adjust the output column to the longest URL.
     # Remove invalid URLs if optional 'validators' module is imported.
     maxlength = 2
     validurls = []
