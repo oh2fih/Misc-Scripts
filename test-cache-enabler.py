@@ -27,21 +27,20 @@ def main(urllist):
     # Adjust the output column to the longest URL.
     # Remove invalid URLs if optional 'validators' module is imported.
     maxlength = 2
-    invalid = []
+    validurls = []
     for url in urllist:
-        if validators.url(url):
+        url = url.strip(' \n\r\t')
+        if validators.url(url) and url != '':
+            validurls.append(url)
             if len(url) > maxlength:
                 maxlength = len(url)
         else:
-            invalid.append(url)
             print("\033[91mInvalid URL: " + url + "\033[0m")
-    for url in invalid:
-        urllist.remove(url)
-    if len(urllist) == 0:
+    if len(validurls) == 0:
         usage()
 
     print ("\n\033[1m{:<{width}} {:<10}\033[0m".format("URL", "RESULT", width=maxlength+2))
-    for url in urllist:
+    for url in validurls:
         try:
             # Initial request to cause Cache Enabler to cache the page.
             with urllib.request.urlopen(url) as response:
@@ -75,5 +74,5 @@ if __name__ == "__main__":
         urllist.extend(sys.argv[1:])
     if not sys.stdin.isatty():
         for line in sys.stdin:
-            urllist.append(line.strip(' \n\r\t'))
+            urllist.append(line)
     main(urllist)
