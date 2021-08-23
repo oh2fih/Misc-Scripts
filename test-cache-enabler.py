@@ -25,7 +25,7 @@ except ImportError:
 def main(urllist):
     '''Causes the pages to be cached, gets them and prints the results as a table.'''
 
-    # Enable ANSI colors on Windows
+    # Enable ANSI colors on Windows.
     os.system("color")
 
     # Strip whitespace and adjust the output column to the longest URL.
@@ -35,9 +35,12 @@ def main(urllist):
     for url in urllist:
         url = url.strip(' \n\r\t')
         if validators.url(url) and url != '':
-            validurls.append(url)
-            if len(url) > maxlength:
-                maxlength = len(url)
+            if url not in validurls:
+                validurls.append(url)
+                if len(url) > maxlength:
+                    maxlength = len(url)
+            else:
+                print("\033[93mRemoved duplicate: " + url + "\033[0m")
         else:
             print("\033[91mInvalid URL: " + url + "\033[0m")
     if len(validurls) == 0:
