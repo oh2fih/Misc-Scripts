@@ -51,8 +51,7 @@ def main(urllist):
     for url in validurls:
         try:
             # Initial request to cause Cache Enabler to cache the page.
-            with urllib.request.urlopen(url) as response:
-                page = response.read()
+            urllib.request.urlopen(url)
             # Get the cached page for processing.
             with urllib.request.urlopen(url) as response:
                 page = response.read()
