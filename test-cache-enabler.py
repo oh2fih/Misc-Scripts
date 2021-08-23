@@ -41,9 +41,9 @@ def main(urllist):
                 if len(url) > maxlength:
                     maxlength = len(url)
             else:
-                print("\033[93mRemoved duplicate: " + url + "\033[0m")
+                print("\033[93mRemoved duplicate URL: " + url + "\033[0m")
         else:
-            print("\033[91mInvalid URL: " + url + "\033[0m")
+            print("\033[91mRemoved invalid URL: " + url + "\033[0m")
     if len(validurls) == 0:
         usage()
 
