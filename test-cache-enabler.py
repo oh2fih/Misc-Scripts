@@ -41,13 +41,13 @@ def main(urllist):
                 if len(url) > maxlength:
                     maxlength = len(url)
             else:
-                print("\033[93mRemoved duplicate URL: " + url + "\033[0m")
+                print(f"{ansi(93)}Removed duplicate URL: {url}{ansi(0)}")
         else:
-            print("\033[91mRemoved invalid URL: " + url + "\033[0m")
+            print(f"{ansi(91)}Removed invalid URL: {url}{ansi(0)}")
     if len(validurls) == 0:
         usage()
 
-    print("\n\033[1m", end="")
+    print(f"{os.linesep}{ansi(1)}", end="")
     printResultLine("URL", "RESULT", maxlength, 1)
     for url in validurls:
         try:
@@ -73,15 +73,22 @@ def getCacheTime(page):
     except:
         return "Not cached."
 
-def printResultLine(url, result, urlmaxlenght, SGR=0):
+def printResultLine(url, result, urlmaxlenght, SGR):
     '''Prints table formatted result line & ANSI colors.'''
     width = urlmaxlenght + 2
-    ansi = "\033[" + str(SGR) + "m"
-    print("{u:<{w}}{a}{r:<10}\033[0m".format(u=url, r=result, w=width, a=ansi))
+    print("{u:<s{w}}{a}{r:<10}{e}".format(
+        u=url, r=result, w=width, a=ansi(SGR), e=ansi(0)
+    ))
+
+def ansi(SGR=0):
+    '''Returns ANSI codes used in this script. SGR = Select Graphic Rendition'''
+    if not isinstance(SGR, int):
+        SGR = 0
+    return f"\033[{SGR}m"
 
 def usage():
-    print("\nUsage: " + sys.argv[0] + " https://example.com [...]")
-    print("\nAlso takes line break separated URLs from a pipe.\n")
+    print(f"{os.linesep}Usage: {sys.argv[0]} https://example.com [...]")
+    print(f"{os.linesep}Also takes line break separated URLs from a pipe.{os.linesep}")
     exit(1)
 
 if __name__ == "__main__":
