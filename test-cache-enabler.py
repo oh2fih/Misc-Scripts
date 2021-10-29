@@ -76,9 +76,7 @@ def getCacheTime(page):
 def printResultLine(url, result, urlmaxlenght, SGR):
     '''Prints table formatted result line & ANSI colors.'''
     width = urlmaxlenght + 2
-    print("{u:<s{w}}{a}{r:<10}{e}".format(
-        u=url, r=result, w=width, a=ansi(SGR), e=ansi(0)
-    ))
+    print(f"{url:{width}}{ansi(SGR)}{result:<10}{ansi(0)}")
 
 def ansi(SGR=0):
     '''Returns ANSI codes used in this script. SGR = Select Graphic Rendition'''
