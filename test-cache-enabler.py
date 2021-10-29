@@ -15,18 +15,21 @@ import sys
 import re
 import os
 import urllib.request
+
 try:
     import validators
 except ImportError:
+
     class validators:
         def url(url):
             return True
 
+
 def main(urllist):
-    '''Causes the pages to be cached, gets them and prints the results as a table.'''
+    """Causes the pages to be cached, gets them and prints the results as a table."""
 
     # Enable ANSI colors on Windows.
-    if os.name == 'nt':
+    if os.name == "nt":
         os.system("color")
 
     # Strip whitespace and adjust the output column to the longest URL.
@@ -34,8 +37,8 @@ def main(urllist):
     maxlength = 2
     validurls = []
     for url in urllist:
-        url = url.strip(' \n\r\t')
-        if validators.url(url) and url != '':
+        url = url.strip(" \n\r\t")
+        if validators.url(url) and url != "":
             if url not in validurls:
                 validurls.append(url)
                 if len(url) > maxlength:
@@ -65,29 +68,34 @@ def main(urllist):
             printResultLine(url, str(e), maxlength, 91)
     print()
 
+
 def getCacheTime(page):
-    '''Parses the cache time from the Cache Enabler comment on a HTML page.'''
+    """Parses the cache time from the Cache Enabler comment on a HTML page."""
     try:
-        cached = re.search(b'<!-- Cache Enabler by KeyCDN (.*) -->', page).group(1)
+        cached = re.search(b"<!-- Cache Enabler by KeyCDN (.*) -->", page).group(1)
         return cached.decode("utf-8")
     except:
         return "Not cached."
 
+
 def printResultLine(url, result, urlmaxlenght, SGR):
-    '''Prints table formatted result line & ANSI colors.'''
+    """Prints table formatted result line & ANSI colors."""
     width = urlmaxlenght + 2
     print(f"{url:{width}}{ansi(SGR)}{result:<10}{ansi(0)}")
 
+
 def ansi(SGR=0):
-    '''Returns ANSI codes used in this script. SGR = Select Graphic Rendition'''
+    """Returns ANSI codes used in this script. SGR = Select Graphic Rendition"""
     if not isinstance(SGR, int):
         SGR = 0
     return f"\033[{SGR}m"
+
 
 def usage():
     print(f"{os.linesep}Usage: {sys.argv[0]} https://example.com [...]")
     print(f"{os.linesep}Also takes line break separated URLs from a pipe.{os.linesep}")
     exit(1)
+
 
 if __name__ == "__main__":
     urllist = []
