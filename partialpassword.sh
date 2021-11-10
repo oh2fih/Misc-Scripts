@@ -34,7 +34,7 @@ if [ "$2" != "-" ]; then
     if [ "$1" = "-" ]; then
       exit 1
     else
-      read -p "Overwrite? (y/N) " answer
+      read -r -p "Overwrite? (y/N) " answer
       if [ "${answer,,}" != "y" ]; then
         exit 1
       fi
@@ -51,14 +51,14 @@ for alternatives in "${@:3}"; do
   for (( i=1; i<${#alternatives}; i++ )); do
     pwlist=$(
       printf "%s" "$pwlist" \
-        | sed 's/'${alternatives:$i:1}'/'${alternatives:0:1}'/g'
+        | sed 's/'"${alternatives:$i:1}"'/'"${alternatives:0:1}"'/g'
       )
   done
 
   # Get max number of characters to be replaced.
   max=$(
     printf "%s" "$pwlist" \
-      | sed 's/[^'$alternatives']//g' \
+      | sed 's/[^'"$alternatives"']//g' \
       | awk '{ print length }' \
       | sort -n \
       | tail -n 1
@@ -66,11 +66,11 @@ for alternatives in "${@:3}"; do
 
   # Add new combinations.
   for (( i=1; i<${#alternatives}; i++ )); do
-    for (( j=1; j<=$max; j++ )); do
-      for (( k=$max; k>=j; k-- )); do
+    for (( j=1; j<=max; j++ )); do
+      for (( k=max; k>=j; k-- )); do
         new=$(
           printf "%s" "$pwlist" \
-            | sed "s/"${alternatives:0:1}"/"${alternatives:$i:1}/$k""
+            | sed "s/""${alternatives:0:1}""/""${alternatives:$i:1}"/$k""
           )
         pwlist=$(printf "%s\n%s" "$pwlist" "$new" | sort -u)
       done
@@ -83,6 +83,6 @@ done
 if [ "$2" = "-" ]; then
   printf "%s\n" "$pwlist"
 else
-  printf "%s\n" "$pwlist" > $2 || exit 1
+  printf "%s\n" "$pwlist" > "$2" || exit 1
   printf "\n%s\n" "Done."
 fi

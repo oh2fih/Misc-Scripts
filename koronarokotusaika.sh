@@ -21,7 +21,7 @@ fi
 if [ -n "$2" ] && [ "$2" -eq "$2" ] 2>/dev/null; then
   MUNICIPALITY=$1
   BYEAR=$2
-  AGE=$(($(date +"%Y")-$BYEAR))
+  AGE=$(($(date +"%Y")-BYEAR))
 else
   printf "\n%s\n\n" "Year of birth should be a number!" >&2
   exit 1
@@ -51,19 +51,19 @@ else
   CACHE_TIME=0
 fi
 
-if [ $CACHE_TIME -le $(( `date +%s` - $CACHE_MAX_SECONDS )) ]; then 
-  printf "\n%s\n" "Downloading fresh data @ "$(date -Iseconds)
+if [ $CACHE_TIME -le $(( $(date +%s) - CACHE_MAX_SECONDS )) ]; then
+  printf "\n%s %s\n" "Downloading fresh data @ " "$(date -Iseconds)"
   curl -s "$API_URL" -o "$CACHE_FILE"
 else
-  printf "\n%s\n" "Using data cached @ "$(date -Iseconds -d @$CACHE_TIME)
+  printf "\n%s %s\n" "Using data cached @ " "$(date -Iseconds -d @$CACHE_TIME)"
 fi
 
 # Get the data for the municipality...
-LABEL=$(cat "$CACHE_FILE" | jq -c '.[] | select(.label=="'"$MUNICIPALITY"'")' )
+LABEL=$(jq -c '.[] | select(.label=="'"$MUNICIPALITY"'")' < "$CACHE_FILE")
 
 if [ -z "$LABEL" ]; then
-  MUNICIPALITIES=$(cat "$CACHE_FILE" | jq -c '.[] | .label')
-  printf "\n%s\n" "Municipality \""$MUNICIPALITY"\" not found! Try one of:" >&2
+  MUNICIPALITIES=$(jq -c '.[] | .label' < "$CACHE_FILE")
+  printf "\n%s\n" "Municipality \"""$MUNICIPALITY""\" not found! Try one of:" >&2
   printf "\n%s\n\n" "$MUNICIPALITIES" >&2
   exit 1
 fi
