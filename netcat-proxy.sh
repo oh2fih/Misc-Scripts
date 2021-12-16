@@ -33,4 +33,4 @@ LISTENER_PID=$!
 printf "\n%s\n" "Proxying port $1 to target $2:$3. Stop with Ctrl-C." 
 
 # Cleanup after Ctrl-C.
-trap 'kill $TARGET_PID && kill $LISTENER_PID && rm "$srvpipe" "$clipipe"' INT ; read -r -d '' _ </dev/tty
+trap 'kill $TARGET_PID ; kill $LISTENER_PID ; rm "$srvpipe" "$clipipe"' INT HUP ; read -r -d '' _ </dev/tty
