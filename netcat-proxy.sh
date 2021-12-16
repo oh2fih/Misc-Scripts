@@ -1,6 +1,6 @@
 #!/bin/sh
 # -----------------------------------------------------------
-# Creates a simple persistent proxy with netcat & named pipes.
+# Creates a simple persistent TCP proxy with netcat & named pipes.
 #
 # Usage: netcat-proxy.sh listenport targethost targetport
 #
@@ -16,6 +16,16 @@ fi
 if ! command -v nc > /dev/null 2>&1; then
   printf "\n%s\n" "This script requires nc (netcat)!" >&2
   exit 1
+fi
+
+if ! [ "$1" -ge 0 ] || ! [ "$1" -le 65535 ]; then
+  printf "\n%s\n" "listenport not a valid TCP port between 0 and 65535" >&2
+  exit 1
+fi
+
+if ! [ "$3" -ge 0 ] || ! [ "$3" -le 65535 ]; then
+  printf "\n%s\n" "targetport not a valid TCP port between 0 and 65535" >&2
+  exit 1                          
 fi
 
 # Make temporary named pipes.
@@ -36,4 +46,3 @@ trap 'kill $TARGET_PID ; kill $LISTENER_PID ; rm "$srvpipe" "$clipipe" ; exit' I
 trap 'exit' TERM
 trap "kill 0" EXIT
 while true; do sleep 1; done
-
