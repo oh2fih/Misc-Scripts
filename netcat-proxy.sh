@@ -13,7 +13,7 @@ if [ "$#" -lt 3 ]; then
   exit 1
 fi
 
-if ! command -v nc &> /dev/null; then
+if ! command -v nc > /dev/null 2>&1; then
   printf "\n%s\n" "This script requires nc (netcat)!" >&2
   exit 1
 fi
