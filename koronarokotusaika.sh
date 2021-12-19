@@ -4,7 +4,7 @@
 # age (without a risk group) are yet eligible for Covid-19
 # vaccination or not. Requires curl and jq.
 #
-# Usage: koronarokotusaika.sh Municipality YearOfBirth
+# Usage: koronarokotusaika.sh Municipality YearOfBirth Dose
 # -----------------------------------------------------------
 
 # CONFIGURATION
@@ -13,8 +13,8 @@ CACHE_MAX_SECONDS="600"
 API_URL="https://api.koronarokotusaika.fi/api/options/municipalities/"
 
 # Test the inputs...
-if [ "$#" -ne 2 ]; then
-  printf "\n%s\n\n" "Usage: $0 Municipality YearOfBirth" >&2
+if [ "$#" -ne 3 ]; then
+  printf "\n%s\n\n" "Usage: $0 Municipality YearOfBirth Dose" >&2
   exit 1
 fi
 
@@ -24,6 +24,13 @@ if [ -n "$2" ] && [ "$2" -eq "$2" ] 2>/dev/null; then
   AGE=$(($(date +"%Y")-BYEAR))
 else
   printf "\n%s\n\n" "Year of birth should be a number!" >&2
+  exit 1
+fi
+
+if [ -n "$3" ] && [ "$3" -eq "$3" ] 2>/dev/null; then
+  DOSE=$3
+else
+  printf "\n%s\n\n" "Dose should be a number!" >&2
   exit 1
 fi
 
@@ -72,22 +79,23 @@ fi
 ELIGIBLE_SINCE=$(
   printf "%s" "$LABEL" \
     | jq -c '.vaccinationGroups[]
+      | select(.target[] | contains('$DOSE'))
       | select((.min<='$AGE')
         and (.max>='$AGE' or .max==null)
         and (.conditionTextKey==null)
-        and (.startDate!=null)) 
+        and (.startDate!=null))
       | "\(.startDate) (ages \(.min)-\(.max), source \(.source))"'
   )
 
 if [ -z "$ELIGIBLE_SINCE" ]; then
   printf "\n%s" "Sorry, but people from $MUNICIPALITY "
   printf "%s" "born in $BYEAR (turning $AGE this year) "
-  printf "%s\n\n" "are not yet eligible for Covid-19 vaccination! :("
+  printf "%s\n\n" "are not yet eligible for #$DOSE Covid-19 vaccination! :("
   exit 0
 else
   printf "\n%s" "Congratulations! People from $MUNICIPALITY "
   printf "%s" "born in $BYEAR (turning $AGE this year) "
-  printf "%s" "have been eligible for Covid-19 vaccination since"
+  printf "%s" "have been eligible for #$DOSE Covid-19 vaccination since"
   printf "\n%s\n\n" "$ELIGIBLE_SINCE"
   exit 0
 fi
