@@ -20,19 +20,20 @@
 # -----------------------------------------------------------
 
 ### CONFIGURATION
+
 PHPVERSION="8.0"
 LETSENCRYPT_WEBROOT="/var/www/letsencrypt"
 
 
-### Check for sudo privileges and the requirements
+### Check for sudo privileges and the requirements.
 
 if [ "$#" -le 1 ]; then
   echo "Usage: sudo $0 username example.com [www.example.com ...]"
   exit 1
 fi
 
-if [ "$EUID" -ne 0 ]
-  then echo "*** ERROR! This script requires sudo privileges."
+if [ "$EUID" -ne 0 ]; then
+  echo "*** ERROR! This script requires sudo privileges."
   exit 1
 fi
 
@@ -57,7 +58,7 @@ else
 fi
 
 
-### Check that the hostnames are pointing to the server...
+### Check that the hostnames are pointing to the server.
 
 MYIP=$(hostname -I | cut -d " " -f1)
 echo "--- My IP address is $MYIP. Comparing..."
@@ -86,7 +87,7 @@ for hostname in "${@:2}"; do
 done
 
 
-### Validate the necessary services are running
+### Validate the necessary services are running.
 
 systemctl is-active --quiet "php$PHPVERSION-fpm" \
   || { echo "*** ERROR! service php$PHPVERSION-fpm not running." ; exit 1; }
@@ -94,7 +95,7 @@ systemctl is-active --quiet "apache2" \
   || { echo "*** ERROR! service apache2 not running." ; exit 1; }
 
 
-### Create the webroot directory with correct permission
+### Create the webroot directory with correct permission.
 
 mkdir -p "/var/www/$1/$2"
 chown "$1:www-data" "/var/www/$1/$2"
@@ -126,7 +127,7 @@ certbot certonly --noninteractive --agree-tos "$letsencrypt_hostnames" \
   --register-unsafely-without-email --webroot -w "$LETSENCRYPT_WEBROOT"
 
 
-### Create a configuration files.
+### Create configuration files.
 
 echo "=== WRITING CONFIGURATION FILE /etc/php/$PHPVERSION/fpm/pool.d/$1.conf ==="
 
