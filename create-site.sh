@@ -12,7 +12,10 @@
 #  - Apache2 VirtualHost configuration.
 #
 # Requires:
-# - Apache2 with modules mod_ssl and mod_proxy enabled.
+# - Apache2 with the following modules enabled:
+#   - mod_ssl
+#   - mod_proxy
+#   - mod_proxy_fcgi
 # - PHP FPM
 # - Certbot
 #
@@ -46,6 +49,8 @@ fi
   || { echo "*** ERROR! Apache2 module ssl not enabled." ; exit 1; }
 [ -f /etc/apache2/mods-enabled/proxy.load ] \
   || { echo "*** ERROR! Apache2 module proxy not enabled." ; exit 1; }
+[ -f /etc/apache2/mods-enabled/proxy_fcgi.load ] \
+  || { echo "*** ERROR! Apache2 module proxy_fcgi not enabled." ; exit 1; }
 
 
 ### Validate the user exists.
