@@ -79,7 +79,7 @@ fi
 ELIGIBLE_SINCE=$(
   printf "%s" "$LABEL" \
     | jq -c '.vaccinationGroups[]
-      | select(.target[] | contains('$DOSE'))
+      | select(.target == "$DOSE")
       | select((.min<='$AGE')
         and (.max>='$AGE' or .max==null)
         and (.conditionTextKey==null)
