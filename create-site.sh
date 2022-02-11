@@ -84,7 +84,7 @@ for hostname in "${@:2}"; do
       if [ "$validated_hostname" != "$2" ]; then
         additional_hostnames=$(echo "$additional_hostnames $validated_hostname" | xargs)
       fi
-      letsencrypt_hostnames=$(echo "$letsencrypt_hostnames -d $validated_hostname" | xargs)
+      letsencrypt_hostnames=$(echo "$letsencrypt_hostnames,$validated_hostname" | xargs)
     else
       echo "*** ERROR! $validated_hostname [$ip_of_hostname] not pointing to [$MYIP]"
     fi
@@ -128,7 +128,7 @@ systemctl reload apache2 \
 
 echo "=== Getting a Let's Encrypt certificate with HTTP-01 challenge ==="
 mkdir -p "$LETSENCRYPT_WEBROOT"
-certbot certonly --noninteractive --agree-tos $letsencrypt_hostnames \
+certbot certonly --noninteractive --agree-tos -d "$letsencrypt_hostnames" \
   --register-unsafely-without-email --webroot -w "$LETSENCRYPT_WEBROOT"
 
 
