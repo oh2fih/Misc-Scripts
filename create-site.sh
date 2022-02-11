@@ -128,7 +128,7 @@ systemctl reload apache2 \
 
 echo "=== Getting a Let's Encrypt certificate with HTTP-01 challenge ==="
 mkdir -p "$LETSENCRYPT_WEBROOT"
-certbot certonly --noninteractive --agree-tos "$letsencrypt_hostnames" \
+certbot certonly --noninteractive --agree-tos $letsencrypt_hostnames \
   --register-unsafely-without-email --webroot -w "$LETSENCRYPT_WEBROOT"
 
 
