@@ -81,10 +81,12 @@ for hostname in "${@:2}"; do
     ip_of_hostname=$(dig "$validated_hostname" +short)
     if [ "$MYIP" = "$ip_of_hostname" ]; then
       echo "  - $validated_hostname [$ip_of_hostname] OK"
-      if [ "$validated_hostname" != "$2" ]; then
+      if [ "$letsencrypt_hostnames" = "" ]; then
+        letsencrypt_hostnames=$(echo "$validated_hostname" | xargs)
+      else
         additional_hostnames=$(echo "$additional_hostnames $validated_hostname" | xargs)
+        letsencrypt_hostnames=$(echo "$letsencrypt_hostnames,$validated_hostname" | xargs)
       fi
-      letsencrypt_hostnames=$(echo "$letsencrypt_hostnames,$validated_hostname" | xargs)
     else
       echo "*** ERROR! $validated_hostname [$ip_of_hostname] not pointing to [$MYIP]"
     fi
