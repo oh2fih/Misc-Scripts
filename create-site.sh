@@ -262,3 +262,11 @@ a2ensite "$2" \
 echo "--- Reloading Apache2."
 systemctl reload apache2 \
   || echo "*** ERROR! Unable to reload apache2"
+
+
+### Commit changes with etckeeper if in use.
+
+if command -v etckeeper > /dev/null 2>&1; then
+  echo "--- Commit changes with etckeeper."
+  etckeeper commit "$0 $*"
+fi
