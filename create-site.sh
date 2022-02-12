@@ -247,6 +247,10 @@ else
         SSLCertificateFile /etc/letsencrypt/live/MAINHOSTNAME/fullchain.pem
         SSLCertificateKeyFile /etc/letsencrypt/live/MAINHOSTNAME/privkey.pem
         SSLVerifyClient None
+        
+        <IfModule mod_headers.c>
+                Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        </IfModule>
 
         Redirect permanent / https://MAINHOSTNAME/
 </VirtualHost>
