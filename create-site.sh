@@ -102,8 +102,17 @@ systemctl is-active --quiet "apache2" \
   || { echo "*** ERROR! service apache2 not running." ; exit 1; }
 
 
+### Commit earlier changes with etckeeper if in use.
+
+if command -v etckeeper > /dev/null 2>&1; then
+  echo "--- Commit earlier changes with etckeeper."
+  etckeeper commit "Changes made before running create-site.sh"
+fi
+
+
 ### Create the webroot directory with correct permission.
 
+echo "--- Creating webroot directory /var/www/$1/$2"
 mkdir -p "/var/www/$1/$2"
 chown "$1:www-data" "/var/www/$1/$2"
 chmod 750 "/var/www/$1/$2"
