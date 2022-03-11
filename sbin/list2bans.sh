@@ -34,7 +34,7 @@ for JAIL in $JAILS; do
   if [ -z ${IP+x} ]; then
     printf "\\n%s\\n" "$JAILSTATUS"
   else
-    if [[ "$JAILSTATUS" =~ .*" $IP ".* ]]; then
+    if [[ "$JAILSTATUS" =~ .*[[:space:]]+"$IP"([[:space:]]|$)+.* ]]; then
       BANNED+=("$JAIL")
     fi
   fi
