@@ -17,8 +17,13 @@ if [ "$#" -gt 0 ]; then
     IP="$1"
     BANNED=()
   else
-    echo "Usage: sudo $0 [ip]"
-    exit 1
+    if [[ $1 =~ ^([0-9a-f]{1,4}:+){3,7}[0-9a-f]{1,4}$ ]]; then
+      IP="$1"
+      BANNED=()
+    else
+      echo "Usage: sudo $0 [ip]"
+      exit 1
+    fi
   fi
 fi
 
@@ -51,3 +56,4 @@ else
 fi
 
 iptables -L -n | awk '$1=="REJECT" && $4!="0.0.0.0/0"' | grep " $IP "
+ip6tables -L -n | awk '$1=="REJECT"' | grep " $IP "
