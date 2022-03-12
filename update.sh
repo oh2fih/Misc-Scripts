@@ -34,7 +34,7 @@ done
 
 cd "$GITROOT/sbin" || exit 1
 for f in *; do
-  if test -f "$BIN/$f"; then
+  if test -f "$SBIN/$f"; then
     printf "Updating %s/%s...\n" "$SBIN" "$f"
     cp "$GITROOT/sbin/$f" "$SBIN/$f"
   else
