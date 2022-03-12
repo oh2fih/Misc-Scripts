@@ -9,9 +9,12 @@
 
 IPS=()
 
-for IP in "$@"; do
-  if [[ "$IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    IPS+=("$IP")
+for ARG in "$@"; do
+  if [[ "$ARG" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    IPS+=("$ARG")
+  fi
+  if [[ "$ARG" =~ ^([0-9a-f]{1,4}:+){3,7}[0-9a-f]{1,4}$ ]]; then
+    IPS+=("$ARG")
   fi
 done
 
@@ -53,7 +56,10 @@ done
 
 printf "\\n"
 
-REJECTS=$(iptables -L -n | awk '$1=="REJECT" && $4!="0.0.0.0/0"')
+REJECTS=$(
+  iptables -L -n | awk '$1=="REJECT" && $4!="0.0.0.0/0"' \
+    && ip6tables -L -n | awk '$1=="REJECT"'
+  )
 for IP in "${IPS[@]}"; do
   echo "$REJECTS" | grep " $IP "
 done
