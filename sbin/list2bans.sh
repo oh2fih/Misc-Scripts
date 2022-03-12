@@ -17,8 +17,8 @@ if [ "$#" -gt 0 ]; then
     IP="$1"
     BANNED=()
   else
-    if [[ $1 =~ ^([0-9a-f]{1,4}:+){3,7}[0-9a-f]{1,4}$ ]]; then
-      IP="$1"
+    if [[ ${1,,} =~ ^([0-9a-f]{1,4}:+){3,7}[0-9a-f]{1,4}$ ]]; then
+      IP="${1,,}"
       BANNED=()
     else
       echo "Usage: sudo $0 [ip]"
