@@ -70,7 +70,7 @@ for alternatives in "${@:3}"; do
       for (( k=max; k>=j; k-- )); do
         new=$(
           printf "%s" "$pwlist" \
-            | sed "s/""${alternatives:0:1}""/""${alternatives:$i:1}"/$k""
+            | sed "s/""${alternatives:0:1}""/""${alternatives:$i:1}"/"$k"""
           )
         pwlist=$(printf "%s\n%s" "$pwlist" "$new" | sort -u)
       done
