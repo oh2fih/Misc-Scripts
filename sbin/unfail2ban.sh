@@ -45,7 +45,7 @@ for JAIL in $JAILS; do
   for IP in "${IPS[@]}"; do
     if [[ "$JAILSTATUS" =~ .*[[:space:]]+"$IP"([[:space:]]|$)+.* ]]; then
       RESULT=$(fail2ban-client set "$JAIL" unbanip "$IP")
-      if [ "$RESULT" = "1" ]; then
+      if [ "$RESULT" = "$IP" ]; then
         printf "Unbanned %s from jail %s\\n" "$IP" "$JAIL"
       else
         printf "Failed to unban %s from jail %s\\n" "$IP" "$JAIL" >&2
