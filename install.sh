@@ -43,7 +43,8 @@ done
 
 HEIGHT=$((BINMENUCOUNT + 9))
 TOINSTALL=$(
-  whiptail --title "Misc-Script to install (1/2)" --checklist --separate-output \
+  whiptail --title "Misc-Script to install (1/2)" --checklist \
+    --nocancel --separate-output \
     "Choose the Misc-Scripts to be installed,\nbin => ${BIN}" \
     "$HEIGHT" "$WIDTH" "$BINMENUCOUNT" \
     "${BINMENULIST[@]}" 3>&1 1>&2 2>&3
@@ -66,7 +67,8 @@ done
 
 HEIGHT=$((SBINMENUCOUNT + 9))
 TOINSTALL+=$(
-  whiptail --title "Misc-Script to install (2/2)" --checklist --separate-output \
+  whiptail --title "Misc-Script to install (2/2)" --checklist \
+    --nocancel --separate-output \
     "Choose the Misc-Scripts to be installed,\nsbin => ${SBIN}" \
     "$HEIGHT" "$WIDTH" "$SBINMENUCOUNT" \
     "${SBINMENULIST[@]}" 3>&1 1>&2 2>&3
