@@ -12,3 +12,11 @@ Miscellaneous scripts for different purposes. Completely unrelated to each other
 | WordPress | [`test-cache-enabler.py`](bin/test-cache-enabler.py) <br> Python 3 | Tests whether the Cache Enabler by KeyCDN (WordPress) is working properly on the URLs given as arguments. <br> `./test-cache-enabler.py https://example.com [...]` |
 | Web | [`koronarokotusaika.sh`](bin/koronarokotusaika.sh) <br> Shell (bash) | COVID-19 vaccination schedule checker for `app.koronarokotusaika.fi` users. Only meaningful for people living in Uusimaa, Finland. <br> `./koronarokotusaika.sh Municipality YearOfBirth Dose` |
 | Web | [`xxl-product-pricelimiter.sh`](bin/xxl-product-pricelimiter.sh) <br> Shell (bash) | XXL.fi product price checker / limiter. <br> `./xxl-product-pricelimiter.sh XXL.fi-ProductURL MaxPrice` |
+
+## Install & update
+
+Interactive installer & updater `install.sh` and simple updater `update.sh` help putting the scripts in directories that are typically in your `$PATH`. While using these installers as root/sudo, you might need to add an exception for the repository with:
+
+```
+sudo git config --global --add safe.directory <path>
+```
