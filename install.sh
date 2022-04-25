@@ -11,7 +11,11 @@
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
 
+# Configuration.
+
 WIDTH=80
+
+# Checks and initialization.
 
 if ! command -v whiptail &> /dev/null; then
   printf "\n%s\n\n" "This interactive installer requires whiptail!" >&2
@@ -28,26 +32,28 @@ fi
 
 GITROOT="$(git rev-parse --show-toplevel)" || exit 1
 
-BINMENULIST=()
-BINMENUCOUNT=0
+# Interactive menus.
+
+MENULIST=()
+MENUCOUNT=0
 
 cd "$GITROOT/bin" || exit 1
 for f in *; do
-  ((BINMENUCOUNT++))
+  ((MENUCOUNT++))
   if test -f "$BIN/$f"; then
-    BINMENULIST+=("bin/$f" "" "ON")
+    MENULIST+=("bin/$f" "" "ON")
   else
-    BINMENULIST+=("bin/$f" "" "OFF")
+    MENULIST+=("bin/$f" "" "OFF")
   fi
 done
 
-HEIGHT=$((BINMENUCOUNT + 9))
+HEIGHT=$((MENUCOUNT + 9))
 TOINSTALL=$(
   whiptail --title "Misc-Script to install (1/2)" \
     --checklist --separate-output \
     "Choose the Misc-Scripts to be installed,\nbin => ${BIN}" \
-    "$HEIGHT" "$WIDTH" "$BINMENUCOUNT" \
-    "${BINMENULIST[@]}" 3>&1 1>&2 2>&3
+    "$HEIGHT" "$WIDTH" "$MENUCOUNT" \
+    "${MENULIST[@]}" 3>&1 1>&2 2>&3
 )
 exitstatus=$?
 if [ "$exitstatus" -ne 0 ]; then
@@ -57,32 +63,34 @@ fi
 
 TOINSTALL+=$'\n'
 
-SBINMENULIST=()
-SBINMENUCOUNT=0
+MENULIST=()
+MENUCOUNT=0
 
 cd "$GITROOT/sbin" || exit 1
 for f in *; do
-  ((SBINMENUCOUNT++))
+  ((MENUCOUNT++))
   if test -f "$SBIN/$f"; then
-    SBINMENULIST+=("sbin/$f" "" "ON")
+    MENULIST+=("sbin/$f" "" "ON")
   else
-    SBINMENULIST+=("sbin/$f" "" "OFF")
+    MENULIST+=("sbin/$f" "" "OFF")
   fi
 done
 
-HEIGHT=$((SBINMENUCOUNT + 9))
+HEIGHT=$((MENUCOUNT + 9))
 TOINSTALL+=$(
   whiptail --title "Misc-Script to install (2/2)" \
     --checklist --separate-output \
     "Choose the Misc-Scripts to be installed,\nsbin => ${SBIN}" \
-    "$HEIGHT" "$WIDTH" "$SBINMENUCOUNT" \
-    "${SBINMENULIST[@]}" 3>&1 1>&2 2>&3
+    "$HEIGHT" "$WIDTH" "$MENUCOUNT" \
+    "${MENULIST[@]}" 3>&1 1>&2 2>&3
 )
 exitstatus=$?
 if [ "$exitstatus" -ne 0 ]; then
   printf "Aborting...\n"
   exit "$exitstatus"
 fi
+
+# Install, update & uninstall.
 
 cd "$GITROOT/bin" || exit 1
 for f in *; do
