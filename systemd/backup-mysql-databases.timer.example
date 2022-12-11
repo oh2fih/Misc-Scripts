@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer for Backup all MySQL databases
+
+[Timer]
+Unit=backup-mysql-databases.service
+OnCalendar=*-*-* 06:15:00
+
+[Install]
+WantedBy=timers.target

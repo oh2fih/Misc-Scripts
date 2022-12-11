@@ -1,0 +1,12 @@
+[Unit]
+Description=Backup all MySQL databases
+StartLimitIntervalSec=7200
+StartLimitBurst=5
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/sqldumps/
+UMask=0037
+ExecStart=+/usr/local/sbin/backup-mysql-databases.sh
+Restart=on-failure
+RestartSec=180
