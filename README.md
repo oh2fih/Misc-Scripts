@@ -4,6 +4,7 @@ Miscellaneous scripts for different purposes. Completely unrelated to each other
 
 | Category | Script & Language | Purpose & Usage |
 |:---|:---|:---|
+| Automation | [`backup-mysql-databases.sh`](sbin/backup-mysql-databases.sh) <br> Shell (bash) | Backup all MySQL/MariaDB databases; dump & compress. Overwrites older backups matching the same date pattern. Recommended to be scheduled with a SystemD [service](systemd/backup-mysql-databases.service.example) & [timer](systemd/backup-mysql-databases.timer.example).<br> |
 | Automation | [`create-site.sh`](sbin/create-site.sh) <br> Shell (bash) | Web hosting automation for Debian with Apache2, PHP-FPM & Let's Encrypt. <br> `sudo ./create-site.sh username example.com [www.example.com ...]` |
 | Firewall | [`list2bans.sh`](sbin/list2bans.sh) <br> Shell (bash) | Lists all Fail2Ban jail statuses or jails banning an ip. <br> `sudo ./list2bans.sh [ip]` |
 | Firewall | [`unfail2ban.sh`](sbin/unfail2ban.sh) <br> Shell (bash) | Unbans the given IPs from all Fail2Ban jails. <br> `sudo ./unfail2ban.sh ip [ip ...]` |
