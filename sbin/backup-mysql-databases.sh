@@ -7,6 +7,7 @@
 # Default settings can be changed with environment variables:
 #  ExcludeDatabases: databases to exclude, separated with '|'
 #  DatePattern: +FORMAT; see man date(1)
+#  compress: Compress usign Gzip; true/false
 #
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
@@ -21,7 +22,7 @@ if [[ ! -v ExcludeDatabases ]]; then
 fi
 
 if [[ ! -v DatePattern ]]; then
-  DatePattern=$DefaultDatePattern
+  DatePattern="$DefaultDatePattern"
 fi
 
 # Check for requirements.
@@ -40,12 +41,14 @@ if ! command -v gzip > /dev/null 2>&1; then
   echo "*** WARNING! Gzip not found; skipping compression."
   compress=false
 else
-  compress=true
+  if [[ ! -v compress ]]; then
+    compress=true
+  fi
 fi
 
-date=$(date "+${DatePattern}")
-
 set -e
+
+date=$(date "+${DatePattern}")
 
 # List existing databases not excluded.
 
