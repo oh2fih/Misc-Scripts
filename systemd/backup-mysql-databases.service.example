@@ -5,7 +5,7 @@ StartLimitBurst=5
 
 [Service]
 Type=oneshot
-WorkingDirectory=/var/sqldumps/
+WorkingDirectory=/var/local/sqldumps
 UMask=0037
 ExecStart=+/usr/local/sbin/backup-mysql-databases.sh
 Restart=on-failure
