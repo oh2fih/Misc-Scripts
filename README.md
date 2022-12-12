@@ -1,6 +1,6 @@
 # Misc-Scripts by oh2fih
 
-Miscellaneous scripts for different purposes. Completely unrelated to each other.
+Miscellaneous scripts for different purposes. Mostly unrelated to each other.
 
 | Category | Script & Language | Purpose & Usage |
 |:---|:---|:---|
