@@ -12,17 +12,18 @@
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
 
-DefaultExcludeDatabases="information_schema|performance_schema|mysql"
-DefaultDatePattern="%d"
-
 # Set defaults if environment variables not set.
 
 if [[ ! -v ExcludeDatabases ]]; then
-  ExcludeDatabases="$DefaultExcludeDatabases"
+  ExcludeDatabases="information_schema|performance_schema|mysql"
 fi
 
 if [[ ! -v DatePattern ]]; then
-  DatePattern="$DefaultDatePattern"
+  DatePattern="%d"
+fi
+
+if [[ ! -v compress ]]; then
+  compress=true
 fi
 
 # Check for requirements.
@@ -37,12 +38,10 @@ if ! command -v mysqldump > /dev/null 2>&1; then
   exit 1
 fi
 
-if ! command -v gzip > /dev/null 2>&1; then
-  echo "*** WARNING! Gzip not found; skipping compression."
-  compress=false
-else
-  if [[ ! -v compress ]]; then
-    compress=true
+if [ "$compress" = true ]; then
+  if ! command -v gzip > /dev/null 2>&1; then
+    echo "*** WARNING! Gzip not found; skipping compression."
+    compress=false
   fi
 fi
 
