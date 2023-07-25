@@ -43,7 +43,7 @@ if test -f "$SHUTDOWN_SCHEDULED"; then
       )"
     )
   echo "Reboot/shutdown already scheduled at ${SHUTDOWN_DATE}."
-  exit 2
+  exit 3
 fi
 
 ### Count segfaults & schedule a reboot.
