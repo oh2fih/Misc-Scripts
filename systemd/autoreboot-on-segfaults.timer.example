@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer for segfault checks & autoreboot
+
+[Timer]
+Unit=autoreboot-on-segfaults.service
+OnCalendar=*-*-* *:0/10:00
+
+[Install]
+WantedBy=timers.target
