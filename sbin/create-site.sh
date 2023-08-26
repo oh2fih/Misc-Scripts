@@ -24,8 +24,23 @@
 
 ### CONFIGURATION
 
-PHPVERSION="8.0"
+PHPVERSION=""
 LETSENCRYPT_WEBROOT="/var/www/letsencrypt"
+
+
+### Autodetect PHP version
+
+if [ -z "$PHPVERSION" ]; then
+  PHPVERSION=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
+  if [ -z "$PHPVERSION" ]; then
+    echo "*** ERROR! \$PHPVERSION not configured & could not autodetect"
+    exit 1
+  else
+    echo "--- Detected PHP version: $PHPVERSION"
+  fi
+else
+  echo "--- Configured PHP version: $PHPVERSION"
+fi
 
 
 ### Check for sudo privileges and the requirements.
