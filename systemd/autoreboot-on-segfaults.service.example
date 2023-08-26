@@ -1,0 +1,9 @@
+[Unit]
+Description=Reboots the server if there has been segfaults
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/autoreboot-on-segfaults.sh
+Restart=no
+Environment=MAX_SEGFAULTS=10
+Environment=REBOOT_WAITING_TIME=5
