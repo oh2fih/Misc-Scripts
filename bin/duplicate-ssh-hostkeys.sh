@@ -83,7 +83,7 @@ echo
 hostkeys=$(grep "debug1: Server host key" "$tmpdir"/ssh-*.log)
 
 duplicatekeys=$(echo "$hostkeys" \
-  | awk '{ print $6; }' \
+  | awk '{ print $5" "$6; }' \
   | sort \
   | uniq -d)
 
@@ -92,7 +92,7 @@ if [ -n "$duplicatekeys" ]; then
   echo "  ----- -------------"
 
   echo "$hostkeys" \
-    | awk '{ print $6; }' \
+    | awk '{ print $5" "$6; }' \
     | sort \
     | uniq -cd \
     | sort -n
