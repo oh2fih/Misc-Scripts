@@ -95,7 +95,7 @@ if [ -n "$duplicatekeys" ]; then
     | awk '{ print $5" "$6; }' \
     | sort \
     | uniq -cd \
-    | sort -n
+    | sort -nr
 
   while IFS= read -r key; do
     echo
