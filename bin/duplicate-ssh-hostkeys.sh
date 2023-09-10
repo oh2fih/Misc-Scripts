@@ -2,8 +2,11 @@
 # -----------------------------------------------------------
 # Find duplicate SSH host keys in a CIDR range
 #
-# Usage:   duplicate-ssh-hostkeys.sh CIDR [KexAlgorithms]
-# Example: duplicate-ssh-hostkeys.sh 127.0.0.0/24 ecdh-sha2-nistp521
+# Examine your network for shared host keys 
+# that could potentially be dangerous.
+#
+# Usage:   duplicate-ssh-hostkeys.sh CIDR [HostKeyAlgorithms]
+# Example: duplicate-ssh-hostkeys.sh 127.0.0.0/24 ecdsa-sha2-nistp256
 #
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
@@ -14,7 +17,7 @@ if [ "$#" -lt 1 ]; then
   exit 1
 fi
 
-KexAlgorithms=${2:-ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256}
+HostKeyAlgorithms=${2:-ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521}
 
 # Check for requirements. Print all unmet requirements at once.
 
@@ -49,7 +52,7 @@ fi
 echo "Creating temporary directory for connection logs..."
 tmpdir=$(mktemp hostkeyscan.XXXXXXXXXX -td)
 echo "Created $tmpdir"
-echo "KexAlgorithms=$KexAlgorithms"
+echo "HostKeyAlgorithms=$HostKeyAlgorithms"
 count=$(echo "$ips" |wc -l)
 echo "Scanning hostkeys in $1 ($count hosts)..."
 
@@ -58,7 +61,7 @@ echo "$ips" \
     "ssh -v \
       -o ConnectTimeout=5 \
       -o BatchMode=yes \
-      -o KexAlgorithms=\"$KexAlgorithms\" \
+      -o HostKeyAlgorithms=\"$HostKeyAlgorithms\" \
       -o StrictHostKeyChecking=no \
       -o UserKnownHostsFile=/dev/null \
       -o IdentitiesOnly=yes \
