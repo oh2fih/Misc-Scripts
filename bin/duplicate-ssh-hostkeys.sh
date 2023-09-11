@@ -12,7 +12,7 @@
 # -----------------------------------------------------------
 
 if [ "$#" -lt 1 ]; then
-  printf "\n%s\n" "Usage:   $0 CIDR [KexAlgorithms]" >&2
+  printf "\n%s\n" "Usage:   $0 CIDR [HostKeyAlgorithms]" >&2
   printf "\n%s\n\n" "Example: $0 127.0.0.0/24 ecdh-sha2-nistp521" >&2
   exit 1
 fi
