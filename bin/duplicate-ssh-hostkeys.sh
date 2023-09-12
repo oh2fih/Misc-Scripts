@@ -5,19 +5,32 @@
 # Examine your network for shared host keys 
 # that could potentially be dangerous.
 #
-# Usage:   duplicate-ssh-hostkeys.sh CIDR [HostKeyAlgorithms]
-# Example: duplicate-ssh-hostkeys.sh 127.0.0.0/24 ecdsa-sha2-nistp256
+# Usage:   duplicate-ssh-hostkeys.sh CIDR [HostKeyAlgorithm ...]
+# Example: duplicate-ssh-hostkeys.sh 127.0.0.0/24 ssh-ed25519 ssh-rsa
 #
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
 
 if [ "$#" -lt 1 ]; then
-  echo "Usage:   $0 CIDR [HostKeyAlgorithms]" >&2
-  echo "Example: $0 127.0.0.0/24 ecdh-sha2-nistp521" >&2
+  echo "Usage:   $0 CIDR [HostKeyAlgorithm ...]" >&2
+  echo "Example: $0 127.0.0.0/24 ssh-ed25519 ssh-rsa" >&2
   exit 1
 fi
 
-HostKeyAlgorithms=${2:-ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521}
+# Default HostKeyAlgorithms
+
+if [ "$#" -eq 1 ]; then
+  declare -a HostKeyAlgorithms=(
+    "ecdsa-sha2-nistp256"
+    "ecdsa-sha2-nistp384"
+    "ecdsa-sha2-nistp521"
+    "ssh-ed25519"
+    "ssh-rsa"
+    "ssh-dss"
+  )
+else
+  declare -a HostKeyAlgorithms=("${@:2}")
+fi
 
 # Check for requirements. Print all unmet requirements at once.
 
@@ -53,32 +66,46 @@ echo "Creating temporary directory for connection logs..."
 tmpdir=$(mktemp hostkeyscan.XXXXXXXXXX -td)
 echo "Created $tmpdir"
 echo
-echo "HostKeyAlgorithms=$HostKeyAlgorithms"
 count=$(echo "$ips" |wc -l)
-echo "Scanning hostkeys in $1 ($count hosts)..."
+echo "Collecting hostkeys in $1 ($count hosts)..."
 
-echo "$ips" \
-  | parallel -j 32 --timeout 20 --progress \
-    "ssh -v \
-      -o ConnectTimeout=5 \
-      -o BatchMode=yes \
-      -o HostKeyAlgorithms=\"$HostKeyAlgorithms\" \
-      -o StrictHostKeyChecking=no \
-      -o UserKnownHostsFile=/dev/null \
-      -o IdentitiesOnly=yes \
-      -o IdentityFile=/dev/null \
-      -l hostkeyscan {} \
-      > \"$tmpdir/ssh-{}.log\" \
-      2>&1"
+# Data collection
+
+total="${#HostKeyAlgorithms[@]}"
+i=1
+for algo in "${HostKeyAlgorithms[@]}"; do
+  echo
+  echo "Testing $algo ($i/$total)"
+
+  echo "$ips" \
+    | parallel -j 128 --timeout 20 --progress \
+      "ssh -v \
+        -o ConnectTimeout=5 \
+        -o BatchMode=yes \
+        -o HostKeyAlgorithms=\"$algo\" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        -o IdentitiesOnly=yes \
+        -o IdentityFile=/dev/null \
+        -l hostkeyscan {} \
+        >> \"$tmpdir/ssh-{}.log\" \
+        2>&1"
+
+  ((++i))
+done
+
+# Cleanup
 
 echo
-echo "Done with $(find "$tmpdir" | wc -l) attempted connections."
+echo "Done: $(find "$tmpdir" | wc -l) hosts tested."
 echo "Removing logs for unsuccessful connections..."
 
 grep -L "debug1: Connection established." "$tmpdir"/ssh-*.log \
   | xargs rm 2>/dev/null
 
-echo "$(find "$tmpdir" | wc -l) connections established."
+# Analyze
+
+echo "$(find "$tmpdir" | wc -l) hosts with established connections."
 echo
 echo "Searching duplicate hostkeys..."
 echo
