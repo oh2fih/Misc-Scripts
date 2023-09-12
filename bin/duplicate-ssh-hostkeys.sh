@@ -14,7 +14,7 @@ read -r -d '' USAGE << EOM
 #   -v                           Verbosity required for collecting host keys.
 #   ConnectTimeout=5             Enough for handshakes; speeds up the script.
 #   BatchMode=yes                We do not want password prompts in scripts.
-#   HostKeyAlgorithms=$algo      A single host key instead of server's default.
+#   HostKeyAlgorithms="algo"     A single host key instead of server's default.
 #   StrictHostKeyChecking=no     Do not care about the known hosts list.
 #   UserKnownHostsFile=/dev/null ...and do not save these hosts to the list.
 #   IdentitiesOnly=yes           Do not use the SSH keys from configuration.
@@ -74,12 +74,12 @@ if ! ips=$(prips "$1" 2>/dev/null); then
   exit 1
 fi
 
-echo "Creating temporary directory for connection logs..."
+echo -e "\033[0;32mCreating temporary directory for connection logs...\033[0m"
 tmpdir=$(mktemp hostkeyscan.XXXXXXXXXX -td)
-echo "Created $tmpdir"
+echo -e "\033[0;32mCreated $tmpdir\033[0m"
 echo
 count=$(echo "$ips" |wc -l)
-echo "Collecting hostkeys in $1 ($count hosts)..."
+echo -e "\033[0;32mCollecting hostkeys in $1 ($count hosts)...\033[0m"
 
 # Data collection
 
@@ -87,7 +87,7 @@ total="${#HostKeyAlgorithms[@]}"
 i=1
 for algo in "${HostKeyAlgorithms[@]}"; do
   echo
-  echo "Testing $algo ($i/$total)"
+  echo -e "\033[0;32mTesting $algo ($i/$total)\033[0m"
 
   echo "$ips" \
     | parallel -j 128 --timeout 20 --progress \
@@ -109,8 +109,8 @@ done
 # Cleanup
 
 echo
-echo "Done: $(find "$tmpdir" | wc -l) hosts tested."
-echo "Removing logs for unsuccessful connections..."
+echo -e "\033[0;32mDone: $(find "$tmpdir" | wc -l) hosts tested.\033[0m"
+echo -e "\033[0;32mRemoving logs for unsuccessful connections...\033[0m"
 
 grep -L "debug1: Connection established." "$tmpdir"/ssh-*.log \
   | xargs rm 2>/dev/null
@@ -119,7 +119,7 @@ grep -L "debug1: Connection established." "$tmpdir"/ssh-*.log \
 
 echo "$(find "$tmpdir" | wc -l) hosts with established connections."
 echo
-echo "Searching duplicate hostkeys..."
+echo -e "\033[0;32mSearching duplicate hostkeys...\033[0m"
 echo
 
 hostkeys=$(grep "debug1: Server host key" "$tmpdir"/ssh-*.log)
@@ -130,8 +130,8 @@ duplicatekeys=$(echo "$hostkeys" \
   | uniq -d)
 
 if [ -n "$duplicatekeys" ]; then
-  echo "  count key"
-  echo "  ----- -------------"
+  echo -e "\033[0;33m  count key\033[0m"
+  echo -e "\033[0;33m  ----- -------------\033[0m"
 
   echo "$hostkeys" \
     | awk '{ print $5" "$6; }' \
@@ -141,15 +141,15 @@ if [ -n "$duplicatekeys" ]; then
 
   while IFS= read -r key; do
     echo
-    echo "Hosts sharing $key"
+    echo -e "\033[0;33mHosts sharing $key\033[0m"
     grep "$key" "$tmpdir"/ssh-*.log \
       | sed "s|$tmpdir/ssh-|  |g" \
       | sed "s|.log.*||g" \
       | sort -t . -k 1,1n -k 2,2n -k 3,3n -k 4,4n
   done <<< "$duplicatekeys"
 else
-  echo "No duplicate host keys found."
+  echo -e "\033[0;32mNo duplicate host keys found.\033[0m"
 fi
 
 echo
-echo "You can manually examine the connection logs in $tmpdir"
+echo -e "\033[0;32mYou can examine the connection logs in $tmpdir\033[0m"
