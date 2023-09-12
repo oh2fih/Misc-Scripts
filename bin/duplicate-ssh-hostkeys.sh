@@ -8,6 +8,18 @@
 # Usage:   duplicate-ssh-hostkeys.sh CIDR [HostKeyAlgorithm ...]
 # Example: duplicate-ssh-hostkeys.sh 127.0.0.0/24 ssh-ed25519 ssh-rsa
 #
+# Rationale for the ssh options used:
+#
+#   -v                           Verbosity required for collecting host keys.
+#   ConnectTimeout=5             Enough for handshakes; speeds up the script.
+#   BatchMode=yes                We do not want password prompts in scripts.
+#   HostKeyAlgorithms=$algo      A single host key instead of server's default.
+#   StrictHostKeyChecking=no     Do not care about the known hosts list.
+#   UserKnownHostsFile=/dev/null ...and do not save these hosts to the list.
+#   IdentitiesOnly=yes           Do not use the SSH keys from configuration.
+#   IdentityFile=/dev/null       ...and make sure no keys are found.
+#   -l hostkeyscan               Username that shows in the target system logs.
+#        
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
 
