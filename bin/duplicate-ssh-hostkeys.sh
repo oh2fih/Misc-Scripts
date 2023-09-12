@@ -12,8 +12,8 @@
 # -----------------------------------------------------------
 
 if [ "$#" -lt 1 ]; then
-  printf "\n%s\n" "Usage:   $0 CIDR [HostKeyAlgorithms]" >&2
-  printf "\n%s\n\n" "Example: $0 127.0.0.0/24 ecdh-sha2-nistp521" >&2
+  echo "Usage:   $0 CIDR [HostKeyAlgorithms]" >&2
+  echo "Example: $0 127.0.0.0/24 ecdh-sha2-nistp521" >&2
   exit 1
 fi
 
@@ -52,6 +52,7 @@ fi
 echo "Creating temporary directory for connection logs..."
 tmpdir=$(mktemp hostkeyscan.XXXXXXXXXX -td)
 echo "Created $tmpdir"
+echo
 echo "HostKeyAlgorithms=$HostKeyAlgorithms"
 count=$(echo "$ips" |wc -l)
 echo "Scanning hostkeys in $1 ($count hosts)..."
@@ -66,9 +67,11 @@ echo "$ips" \
       -o UserKnownHostsFile=/dev/null \
       -o IdentitiesOnly=yes \
       -o IdentityFile=/dev/null \
-      -l hostkeyscan {} > \"$tmpdir/ssh-{}.log\" \
+      -l hostkeyscan {} \
+      > \"$tmpdir/ssh-{}.log\" \
       2>&1"
 
+echo
 echo "Done with $(find "$tmpdir" | wc -l) attempted connections."
 echo "Removing logs for unsuccessful connections..."
 
@@ -105,7 +108,6 @@ if [ -n "$duplicatekeys" ]; then
       | sed "s|.log.*||g" \
       | sort -t . -k 1,1n -k 2,2n -k 3,3n -k 4,4n
   done <<< "$duplicatekeys"
-
 else
   echo "No duplicate host keys found."
 fi
