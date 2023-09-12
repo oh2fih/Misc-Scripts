@@ -1,8 +1,9 @@
 #!/bin/bash
-# -----------------------------------------------------------
+read -r -d '' USAGE << EOM
+# -----------------------------------------------------------------------------
 # Find duplicate SSH host keys in a CIDR range
 #
-# Examine your network for shared host keys 
+# Examine your network for shared host keys
 # that could potentially be dangerous.
 #
 # Usage:   duplicate-ssh-hostkeys.sh CIDR [HostKeyAlgorithm ...]
@@ -21,11 +22,11 @@
 #   -l hostkeyscan               Username that shows in the target system logs.
 #        
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# -----------------------------------------------------------------------------
+EOM
 
 if [ "$#" -lt 1 ]; then
-  echo "Usage:   $0 CIDR [HostKeyAlgorithm ...]" >&2
-  echo "Example: $0 127.0.0.0/24 ssh-ed25519 ssh-rsa" >&2
+  echo -e "\033[0;32m${USAGE}\033[0m" >&2
   exit 1
 fi
 
@@ -68,9 +69,8 @@ if [ "$UNMET" -gt 0 ]; then
   exit 1
 fi
 
-if ! ips=$(prips "$1"); then
-  echo
-  echo "The \"$1\" is not a network starting address in CIDR notation."
+if ! ips=$(prips "$1" 2>/dev/null); then
+  echo -e "\033[0;31m\"$1\" is not a CIDR network starting address.\033[0m" >&2
   exit 1
 fi
 
