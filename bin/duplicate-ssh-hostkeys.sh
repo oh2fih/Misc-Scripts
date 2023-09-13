@@ -75,7 +75,7 @@ if ! ips=$(prips "$1" 2>/dev/null); then
 fi
 
 echo -e "\033[0;32mCreating temporary directory for connection logs...\033[0m"
-tmpdir=$(mktemp hostkeyscan.XXXXXXXXXX -td)
+tmpdir=$(mktemp hostkeyscan.XXXXXXXXXX -td) || exit 1
 echo -e "\033[0;32mCreated $tmpdir\033[0m"
 echo
 count=$(echo "$ips" |wc -l)
