@@ -69,25 +69,25 @@ if [ "$UNMET" -gt 0 ]; then
   exit 1
 fi
 
+# Create IP address list from CIDR & tmp directory for the connection log files
+
 if ! ips=$(prips "$1" 2>/dev/null); then
   echo -e "\033[0;31m\"$1\" is not a CIDR network starting address.\033[0m" >&2
   exit 1
 fi
 
-echo -e "\033[0;32mCreating temporary directory for connection logs...\033[0m"
+echo -e "\033[0;32mCreating temp directory for connection logs...\033[0m" >&2
 tmpdir=$(mktemp hostkeyscan.XXXXXXXXXX -td) || exit 1
-echo -e "\033[0;32mCreated $tmpdir\033[0m"
-echo
+echo -e "\033[0;32mCreated ${tmpdir}\033[0m" >&2
 count=$(echo "$ips" |wc -l)
-echo -e "\033[0;32mCollecting hostkeys in $1 ($count hosts)...\033[0m"
+echo -e "\n\033[0;32mCollecting hostkeys in $1 (${count} hosts)...\033[0m" >&2
 
 # Data collection
 
 total="${#HostKeyAlgorithms[@]}"
 i=1
 for algo in "${HostKeyAlgorithms[@]}"; do
-  echo
-  echo -e "\033[0;32mTesting $algo ($i/$total)\033[0m"
+  echo -e "\n\033[0;32mTesting ${algo} ($i/$total)\033[0m" >&2
 
   echo "$ips" \
     | parallel -j 128 --timeout 20 --progress \
@@ -101,26 +101,25 @@ for algo in "${HostKeyAlgorithms[@]}"; do
         -o IdentityFile=/dev/null \
         -l hostkeyscan {} \
         >> \"$tmpdir/ssh-{}.log\" \
-        2>&1"
+        2>&1" \
+      1>&2
 
   ((++i))
 done
 
 # Cleanup
 
-echo
-echo -e "\033[0;32mDone: $(find "$tmpdir" | wc -l) hosts tested.\033[0m"
-echo -e "\033[0;32mRemoving logs for unsuccessful connections...\033[0m"
+echo -e "\n\033[0;32mDone: $(find "$tmpdir" | wc -l) hosts tested.\033[0m" >&2
+echo -e "\033[0;32mRemoving logs for unsuccessful connections...\033[0m" >&2
 
 grep -L "debug1: Connection established." "$tmpdir"/ssh-*.log \
   | xargs rm 2>/dev/null
 
 # Analyze
 
-echo "$(find "$tmpdir" | wc -l) hosts with established connections."
-echo
-echo -e "\033[0;32mSearching duplicate hostkeys...\033[0m"
-echo
+establ=$(find "$tmpdir" | wc -l)
+echo -e "\033[0;32m${establ} hosts with established connections.\033[0m" >&2
+echo -e "\n\033[0;32mSearching duplicate hostkeys...\033[0m\n" >&2
 
 hostkeys=$(grep "debug1: Server host key" "$tmpdir"/ssh-*.log)
 
@@ -130,8 +129,9 @@ duplicatekeys=$(echo "$hostkeys" \
   | uniq -d)
 
 if [ -n "$duplicatekeys" ]; then
-  echo -e "\033[0;33m  count key\033[0m"
-  echo -e "\033[0;33m  ----- -------------\033[0m"
+  echo -e "Duplicate host keys found in ${1}!\n"
+  echo -e "  count key"
+  echo -e "  ----- -------------"
 
   echo "$hostkeys" \
     | awk '{ print $5" "$6; }' \
@@ -140,16 +140,14 @@ if [ -n "$duplicatekeys" ]; then
     | sort -nr
 
   while IFS= read -r key; do
-    echo
-    echo -e "\033[0;33mHosts sharing $key\033[0m"
+    echo -e "\nHosts sharing ${key}"
     grep "$key" "$tmpdir"/ssh-*.log \
       | sed "s|$tmpdir/ssh-|  |g" \
       | sed "s|.log.*||g" \
       | sort -t . -k 1,1n -k 2,2n -k 3,3n -k 4,4n
   done <<< "$duplicatekeys"
 else
-  echo -e "\033[0;32mNo duplicate host keys found.\033[0m"
+  echo -e "No duplicate host keys found in ${1}."
 fi
 
-echo
-echo -e "\033[0;32mYou can examine the connection logs in $tmpdir\033[0m"
+echo -e "\n\033[0;32mExamine the connection logs in ${tmpdir}\033[0m" >&2
