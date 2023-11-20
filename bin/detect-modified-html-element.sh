@@ -16,6 +16,12 @@
 #               Most CSS level 3 selectors are supported.
 #   $CACHE      Cache file path (for multiple instances).
 #
+# If the element has a constantly changing part it can be
+# found and replaced using extra environment variables:
+#
+#   $MATCH      Pattern to find in sed extended regex format.
+#   $REPLACE    Replacement in sed extended regex format.
+#
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
 
@@ -50,6 +56,10 @@ required_command "hxnormalize" "; Please install html-xml-utils"
 required_command "curl" "for fetching the web page"
 required_command "sha512sum" "for calculating the hashes"
 
+if [ -z ${MATCH+x} ]; then
+  required_command "sed"
+fi
+
 if [ "$UNMET" -gt 0 ]; then
   exit 1
 fi
@@ -65,7 +75,17 @@ ELEMENT=$(
 
 # Calculate the checksum and compare it with the cache
 
-CURRENTCHECKSUM=$(echo "$ELEMENT" | sha512sum)
+if [ -z ${MATCH+x} ]; then
+  CURRENTCHECKSUM=$(echo "$ELEMENT" | sha512sum)
+else
+  ESCAPED_MATCH=$(printf '%s\n' "$MATCH" | sed 's/\//\\\//g')
+  ESCAPED_REPLACE=$(printf '%s\n' "$REPLACE" | sed 's/\//\\\//g')
+  CURRENTCHECKSUM=$(
+    echo "$ELEMENT" \
+      | sed -E "s/${ESCAPED_MATCH}/${ESCAPED_REPLACE}/g" \
+      | sha512sum
+    )
+fi
 
 if [ "$CURRENTCHECKSUM" = "$LASTCHECKSUM" ]; then
   echo "No change in HTML element \"${SELECTOR}\" on \"${URL}\""
