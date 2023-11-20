@@ -1,0 +1,11 @@
+[Unit]
+Description=Checks HTML element changes on a web page every 10 minutes
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/detect-modified-html-element.sh
+Restart=always
+RestartSec=10min
+Environment=URL=https://github.com/oh2fih?tab=repositories
+Environment=SELECTOR=#user-repositories-list
+Environment=CACHE=.detect-modifier-html-element-sha512sum
