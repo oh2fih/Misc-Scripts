@@ -1,7 +1,7 @@
 #!/bin/bash
 # -----------------------------------------------------------
-# Prepends (to stdin/stdout) strings given in as flags 
-# -i, -I, -a, or -A; 
+# Prepends (to stdin/stdout) email header strings given in
+# as flags -i, -I, -a, or -A;
 # after possible mbox 'From' & 'Return-Path' header lines.
 #
 # Procmail's formail mail (re)formatter is still a part of
@@ -12,15 +12,15 @@
 #
 # This is intended as a limited formail replacement that
 # ignores the nyanses of the flags and simply prepends the
-# headers keeping the other headers as is. Any other flags
-# are ignored.
+# valid (RFC 5322, 2.2) non-empty headers keeping the other
+# headers as is. Any other flags are ignored.
 #
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
 
 # A possible Mbox format's From line MUST come before any added headers
 read -r line
-if [[ "$line" =~ ^From\ .*  ]]; then
+if [[ "$line" =~ ^From\ .* ]]; then
   echo "$line"
   firstLine=""
 else
@@ -29,7 +29,7 @@ fi
 
 # Return-Path header conventionally (spamassassin) comes before other headers
 read -r line
-if [[ "$line" =~ ^Return-Path:\ .*  ]]; then
+if [[ "$line" =~ ^Return-Path:\ .* ]]; then
   echo "$line"
   secondLine=""
 else
@@ -43,7 +43,11 @@ while [[ $# -gt 0 ]]; do
     -i|-I|-a|-A)
       nextArg="$2"
       while ! [[ "$nextArg" =~ ^-.* ]] && [[ $# -gt 1 ]]; do
-        echo "$nextArg"
+        # Only prepend valid (RFC 5322, 2.2) non-empty email header fields
+        headerRegex=$'^[\x21-\x39\x3B-\x7E]+:\ [\x20-\x7E]+'
+        if [[ "$nextArg" =~ $headerRegex ]]; then
+          echo "$nextArg"
+        fi
         if ! [[ "$2" =~ ^-.* ]]; then
           shift
           nextArg="$2"
