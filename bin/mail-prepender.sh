@@ -13,10 +13,36 @@
 # This is intended as a limited formail replacement that
 # ignores the nyanses of the flags and simply prepends the
 # valid (RFC 5322, 2.2) non-empty headers keeping the other
-# headers as is. Any other flags are ignored.
+# headers as is. 
+#
+# Clamassassin uses 'formail -c -x' to extract the original
+# subject. Therefore, '-x' & '-X' are implemented, too.
+#
+# Any other flags are ignored.
 #
 # Author : Esa Jokinen (oh2fih)
 # -----------------------------------------------------------
+
+# Handling 'formail -x' & '-X'; ignoring '-c' as grep only gives a single line
+headerNameRegex=$'^[\x21-\x39\x3B-\x7E]+:'
+while getopts ":x:X:" opts; do
+  case "${opts}" in
+    x) # Extract the contents of this headerfield from the header.
+      if [[ "$OPTARG" =~ $headerNameRegex ]]; then
+        grep "${OPTARG}" <&0 | head -n 1 | sed "s/${OPTARG}//"
+      fi
+      exit
+      ;;
+    X) # Same as -x, but also preserves/includes the field name.
+      if [[ "$OPTARG" =~ $headerNameRegex ]]; then
+        grep "${OPTARG}" <&0 | head -n 1
+      fi
+      exit
+      ;;
+    *) # Ignoring anything else, as -i|-I|-a|-A are handled elsewhere.
+      ;;
+  esac
+done
 
 # A possible Mbox format's From line MUST come before any added headers
 read -r line
