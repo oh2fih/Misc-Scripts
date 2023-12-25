@@ -1,15 +1,15 @@
 #!/bin/bash
-# -----------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Updates Misc-Scripts already installed.
 #
 # Usage: [sudo] ./update.sh
 #
-# Run as root/sudo, copies scripts over the existing files 
-# in /usr/local/bin and /usr/local/sbin, otherwise in the
-# user's home directory ~/bin and ~/sbin.
+# Run as root/sudo, copies scripts over the existing files in /usr/local/bin 
+# and /usr/local/sbin, otherwise in the user's home directory ~/bin and ~/sbin.
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 if [ "$EUID" -eq 0 ]; then
   BIN=/usr/local/bin

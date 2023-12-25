@@ -1,10 +1,9 @@
 #!/bin/bash
 read -r -d '' USAGE << EOM
-# -----------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Find duplicate SSH host keys in a CIDR range
 #
-# Examine your network for shared host keys
-# that could potentially be dangerous.
+# Examine your network for shared host keys that could potentially be dangerous.
 #
 # Usage:   duplicate-ssh-hostkeys.sh CIDR [HostKeyAlgorithm ...]
 # Example: duplicate-ssh-hostkeys.sh 127.0.0.0/24 ssh-ed25519 ssh-rsa
@@ -22,7 +21,8 @@ read -r -d '' USAGE << EOM
 #   -l hostkeyscan               Username that shows in the target system logs.
 #        
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 EOM
 
 if [ "$#" -lt 1 ]; then

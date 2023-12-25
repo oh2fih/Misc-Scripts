@@ -1,16 +1,17 @@
 #!/bin/bash
-# -----------------------------------------------------------
-# Backup all MySQL/MariaDB databases; dump & compress.
-# Overwrites older backups matching the same date pattern.
-# Recommended to be scheduled with a SystemD service & timer.
+# ------------------------------------------------------------------------------
+# Backup all MySQL/MariaDB databases; dump & compress. Overwrites older backups 
+# matching the same date pattern. Recommended to be scheduled with a SystemD 
+# service & timer.
 #
 # Default settings can be changed with environment variables:
-#  ExcludeDatabases: databases to exclude, separated with '|'
-#  DatePattern: +FORMAT; see man date(1)
-#  compress: Compress usign Gzip; true/false
+#   ExcludeDatabases:  databases to exclude, separated with '|'
+#   DatePattern:       +FORMAT; see man date(1)
+#   compress:          Compress usign Gzip; true/false
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 # Set defaults if environment variables not set.
 

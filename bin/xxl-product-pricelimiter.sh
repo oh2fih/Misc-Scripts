@@ -1,13 +1,14 @@
 #!/bin/bash
-# -----------------------------------------------------------
-# Gets the current product price from a www.xxl.fi product
-# page, compares it with a maximum price given and exits with
-# error level 0 if the price is lower than the maximum price.
+# ------------------------------------------------------------------------------
+# Gets the current product price from a www.xxl.fi product page, compares it
+# with a maximum price given and exits with error level 0 if the price is lower 
+# than the maximum price.
 #
 # Usage: xxl-product-pricelimiter.sh ProductURL MaxPrice
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 # Test the inputs...
 if [ "$#" -ne 2 ]; then

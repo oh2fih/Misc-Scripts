@@ -1,15 +1,15 @@
 #!/bin/bash
-# -----------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Interactive installer & updater for Misc-Scripts.
 #
 # Usage: [sudo] ./install.sh
 #
-# Run as root/sudo, (un)installs & updates the scripts in
-# /usr/local/bin and /usr/local/sbin, otherwise in the
-# user's home directory ~/bin and ~/sbin.
+# Run as root/sudo, (un)installs & updates the scripts in /usr/local/bin and 
+# /usr/local/sbin, otherwise in the user's home directory ~/bin and ~/sbin.
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 # Configuration.
 

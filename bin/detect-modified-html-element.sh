@@ -1,11 +1,10 @@
 #!/bin/bash
-# -----------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Checks HTML element changes on a web page since last run
 #
-# Detects the content change by caching the sha512sum of
-# a normalized HTML element on a web page. If the contents
-# were changed since the last run, exits with a non-zero
-# status code and prints out the current contents.
+# Detects the content change by caching the sha512sum of a normalized HTML 
+# element on a web page. If the contents were changed since the last run, exits 
+# with a non-zero status code and prints out the current contents.
 #
 # Recommended to be executed as a SystemD service.
 #
@@ -16,14 +15,15 @@
 #               Most CSS level 3 selectors are supported.
 #   $CACHE      Cache file path (for multiple instances).
 #
-# If the element has a constantly changing part it can be
-# found and replaced using extra environment variables:
+# If the element has a constantly changing part it can be found and replaced 
+# using extra environment variables:
 #
 #   $MATCH      Pattern to find in sed extended regex format.
 #   $REPLACE    Replacement in sed extended regex format.
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 # Defaults to monitoring new updates on any of my repositories.
 

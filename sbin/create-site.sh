@@ -1,5 +1,5 @@
 #!/bin/bash
-# -----------------------------------------------------------
+# ------------------------------------------------------------------------------
 # A web hosting automation script (Debian: Apache2, PHP, LE).
 #
 # Usage: sudo $0 username example.com [www.example.com ...]
@@ -20,7 +20,8 @@
 # - Certbot
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 ### CONFIGURATION
 

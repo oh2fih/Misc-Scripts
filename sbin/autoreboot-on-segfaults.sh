@@ -1,15 +1,14 @@
 #!/bin/sh
-# -----------------------------------------------------------
-# Automatically reboots the system if there has been more
-# than MAX_SEGFAULTS segmentation faults on the current boot.
-#
-# This is only intended as a temporary solution; one should
-# really fix the software or the server instead!
+# ------------------------------------------------------------------------------
+# Automatically reboots the system if there has been more than MAX_SEGFAULTS 
+# segmentation faults on the current boot. This is only intended as a temporary 
+# solution; one should really fix the software or the server instead!
 #
 # It is best to launch this using SystemD service & timer.
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 MAX_SEGFAULTS="${MAX_SEGFAULTS:-10}"
 REBOOT_WAITING_TIME="${REBOOT_WAITING_TIME:-5}"

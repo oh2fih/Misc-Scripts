@@ -1,27 +1,23 @@
 #!/bin/bash
-# -----------------------------------------------------------
-# Prepends (to stdin/stdout) email header strings given in
-# as flags -i, -I, -a, or -A;
-# after possible mbox 'From' & 'Return-Path' header lines.
+# ------------------------------------------------------------------------------
+# Prepends (to stdin/stdout) email header strings given in as flags
+# -i, -I, -a, or -A; after possible mbox 'From' & 'Return-Path' header lines.
 #
-# Procmail's formail mail (re)formatter is still a part of
-# most distros and a dependency of, e.g., clamassassin.
-# However, it can only append or replace header fields
-# whereas such fields are better prepended similarly to the
+# Procmail's formail mail (re)formatter is still a part of most distros and 
+# a dependency of, e.g., clamassassin. However, it can only append or replace 
+# header fields whereas such fields are better prepended similarly to the
 # trace fields (RFC 5322, 3.6.7).
 #
-# This is intended as a limited formail replacement that
-# ignores the nyanses of the flags and simply prepends the
-# valid (RFC 5322, 2.2) non-empty headers keeping the other
-# headers as is. 
+# This is intended as a limited formail replacement that ignores the nyanses of
+# the flags and simply prepends the valid (RFC 5322, 2.2) non-empty headers 
+# keeping the other headers as is. 
 #
-# Clamassassin uses 'formail -c -x' to extract the original
-# subject. Therefore, '-x' & '-X' are implemented, too.
-#
-# Any other flags are ignored.
+# Clamassassin uses 'formail -c -x' to extract the original subject. Therefore, 
+# '-x' & '-X' are implemented, too. Any other flags are ignored.
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 # Handling 'formail -x' & '-X'; ignoring '-c' as grep only gives a single line
 headerNameRegex=$'^[\x21-\x39\x3B-\x7E]+:'

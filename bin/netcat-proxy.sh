@@ -1,15 +1,16 @@
 #!/bin/sh
-# -----------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Creates a simple persistent TCP proxy with netcat & named pipes.
 #
 # Usage: netcat-proxy.sh listenport targethost targetport
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 if [ "$#" -lt 3 ]; then
   printf "\n%s\n" "Usage: $0 listenport targethost targetport" >&2
-  printf "\n%s\n" "Creates a simple persistent proxy with netcat & named pipes." >&2
+  printf "\n%s\n" "Creates a persistent proxy with netcat & named pipes." >&2
   exit 1
 fi
 

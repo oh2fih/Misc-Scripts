@@ -1,11 +1,12 @@
 #!/bin/bash
-# -----------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Lists all Fail2Ban jail statuses or jails banning an ip.
 #
 # Usage: sudo list2bans.sh [ip]
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 if [ "$EUID" -ne 0 ]; then
   echo "*** ERROR! This script requires sudo privileges."

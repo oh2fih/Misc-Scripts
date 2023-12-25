@@ -1,7 +1,7 @@
 #!/bin/bash
-# -----------------------------------------------------------
-# Creates a new wordlist from a wordlist by replacing all
-# ambiguous characters with all their possible combinations.
+# ------------------------------------------------------------------------------
+# Creates a new wordlist from a wordlist by replacing all ambiguous characters 
+# with all their possible combinations.
 #
 # Usage: partialpassword.sh input.txt output.txt O0 [Il1 ...]
 #
@@ -9,7 +9,8 @@
 # Using "-" as the output prints the wordlist to stdout.
 #
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 if [ "$#" -lt 3 ]; then
   printf "\n%s\n" "Usage: $0 input.txt output.txt O0 [Il1 ...]" >&2

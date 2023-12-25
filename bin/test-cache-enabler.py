@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# -----------------------------------------------------------
-# Tests whether the Cache Enabler by KeyCDN (WordPress) is
-# working properly on the URLs given as arguments.
+# ------------------------------------------------------------------------------
+# Tests whether the Cache Enabler by KeyCDN (WordPress) is working properly on 
+# the URLs given as arguments. Also takes line break separated URLs from a pipe.
 #
 # Usage: test-cache-enabler.py https://example.com [...]
 #
-# Also takes line break separated URLs from a pipe.
-#
 # Author : Esa Jokinen (oh2fih)
-# -----------------------------------------------------------
+# Home   : https://github.com/oh2fih/Misc-Scripts
+# ------------------------------------------------------------------------------
 
 import sys
 import re
