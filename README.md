@@ -2,6 +2,9 @@
 
 Miscellaneous scripts for different purposes. Mostly unrelated to each other.
 
+![ShellCheck](https://github.com/oh2fih/Misc-Scripts/workflows/ShellCheck/badge.svg)
+![Black (Python)](https://github.com/oh2fih/Misc-Scripts/workflows/Black%20(Python)/badge.svg)
+
 | Category | Script & Language | Purpose & Usage |
 |:---|:---|:---|
 | Email | [`mail-prepender.sh`](bin/mail-prepender.sh) <br> Shell (bash) | Prepends (to stdin/stdout) email header strings given in as flags `i`, `I`, `a`, or `A`; after possible mbox `From` & `Return-Path` header lines. Intended as a limited `formail` replacement that ignores the nyanses of the flags and simply prepends the valid (RFC 5322, 2.2) non-empty headers keeping the other headers as is. Flags `x` & `X` are implemented. Any other flags are ignored. |
