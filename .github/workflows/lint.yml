@@ -1,4 +1,4 @@
-name: ShellCheck
+name: Lint
 on:
   push:
   pull_request:
@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  shellcheck:
-    name: ShellCheck
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,3 +18,8 @@ jobs:
           scandir: .
           format: gcc
           version: stable
+      - name: Black formatting (Python)
+        uses: psf/black@stable
+        with:
+          options: --check --verbose
+          src: .
