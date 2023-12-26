@@ -1,4 +1,4 @@
-name: Lint
+name: ShellCheck
 on:
   push:
   pull_request:
@@ -6,20 +6,15 @@ on:
       - main
 
 jobs:
-  lint:
-    name: Lint
+  shellcheck:
+    name: ShellCheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run ShellCheck
+      - name: Run ShellCheck for shell scripts
         uses: ludeeus/action-shellcheck@master
         with:
           severity: style
           scandir: .
           format: gcc
           version: stable
-      - name: Black formatting (Python)
-        uses: psf/black@stable
-        with:
-          options: --check --verbose
-          src: .
