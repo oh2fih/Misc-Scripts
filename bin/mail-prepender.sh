@@ -46,14 +46,18 @@ read -r line
 if [[ "$line" =~ ^(From|Return-Path:)\ .* ]]; then
   echo "$line"
   firstLine=""
+  if [[ "$line" =~ ^From\ .* ]]; then
+    read -r line
+    if [[ "$line" =~ ^Return-Path:\ .* ]]; then
+      echo "$line"
+      secondLine=""
+    else
+      secondLine="$line"
+    fi
+  fi
 else
   firstLine="$line"
-fi
-read -r line
-if [[ "$line" =~ ^Return-Path:\ .* ]]; then
-  echo "$line"
-  secondLine=""
-else
+  read -r line
   secondLine="$line"
 fi
 
