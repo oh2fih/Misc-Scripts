@@ -40,21 +40,24 @@ while getopts ":x:X:" opts; do
   esac
 done
 
-# A possible Mbox format's From line MUST come before any added headers
-read -r line
-if [[ "$line" =~ ^From\ .* ]]; then
-  echo "$line"
-  firstLine=""
-else
-  firstLine="$line"
-fi
-
+# A possible Mbox format's From line MUST come before any added headers &
 # Return-Path header conventionally (spamassassin) comes before other headers
 read -r line
-if [[ "$line" =~ ^Return-Path:\ .* ]]; then
+if [[ "$line" =~ ^(From|Return-Path:)\ .* ]]; then
   echo "$line"
-  secondLine=""
+  firstLine=""
+  if [[ "$line" =~ ^From\ .* ]]; then
+    read -r line
+    if [[ "$line" =~ ^Return-Path:\ .* ]]; then
+      echo "$line"
+      secondLine=""
+    else
+      secondLine="$line"
+    fi
+  fi
 else
+  firstLine="$line"
+  read -r line
   secondLine="$line"
 fi
 
