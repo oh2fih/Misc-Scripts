@@ -105,6 +105,7 @@ for hostname in "${@:2}"; do
       fi
     else
       echo "*** ERROR! $validated_hostname [$ip_of_hostname] not pointing to [$MYIP]"
+      exit 1
     fi
   fi
 done
