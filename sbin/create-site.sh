@@ -86,13 +86,14 @@ echo "--- My IP address is $MYIP. Comparing..."
 
 additional_hostnames=""
 letsencrypt_hostnames=""
+hostname_errors=0
 
 for hostname in "${@:2}"; do
   validated_hostname=$(echo "$hostname" \
     | grep -P '(?=^.{5,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
   if [ -z "$validated_hostname" ]; then
     echo "*** ERROR! $hostname is not valid!"
-    exit 1
+    ((hostname_errors=hostname_errors+1))
   else
     ip_of_hostname=$(dig "$validated_hostname" +short)
     if [ "$MYIP" = "$ip_of_hostname" ]; then
@@ -105,10 +106,19 @@ for hostname in "${@:2}"; do
       fi
     else
       echo "*** ERROR! $validated_hostname [$ip_of_hostname] not pointing to [$MYIP]"
-      exit 1
+      ((hostname_errors=hostname_errors+1))
     fi
   fi
 done
+
+if [ "$hostname_errors" -gt 0 ]; then
+  if [ "$hostname_errors" -gt 1 ]; then
+    echo "*** ERROR! Multiple ($hostname_errors) hostnames are invalid or not pointing to this server"
+  else
+    echo "*** ERROR! A hostname is invalid or not pointing to this server"
+  fi
+  exit 1
+fi
 
 
 ### Validate the necessary services are running.
