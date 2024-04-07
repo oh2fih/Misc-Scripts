@@ -71,13 +71,13 @@ cd "$(git rev-parse --show-toplevel)" \
 matches=$(
   git log --oneline --no-abbrev-commit --follow -- "$2" \
     | awk '{print $1}' \
-      | while read -r commit; do
-          echo "$commit: $(
-            git show "$commit:$2" 2> /dev/null \
-              | sha256sum \
-              | awk '{print $1}'
-          )"
-        done \
+    | while read -r commit; do
+        echo "$commit: $(
+          git show "$commit:$2" 2> /dev/null \
+            | sha256sum \
+            | awk '{print $1}'
+        )"
+      done \
     | grep -E "[0-9a-f]*:\ $1"
   )
 
