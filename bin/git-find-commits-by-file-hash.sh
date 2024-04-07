@@ -68,7 +68,7 @@ cd "$(git rev-parse --show-toplevel)" \
 
 # Search for the hash & show stats of matching commits
 
-matches=$( \
+matches=$(
   git log --oneline --no-abbrev-commit --follow -- "$2" \
     | awk '{print $1}' \
       | while read -r commit; do
@@ -81,7 +81,7 @@ matches=$( \
     | grep -E "[0-9a-f]*:\ $1"
   )
 
-if [[ "$matches" = [0-9a-f]* ]]; then
+if [[ "$matches" =~ [0-9a-f]+ ]]; then
   echo "$matches" \
     | awk -F: '{print $1}' \
     | xargs git show --stat
