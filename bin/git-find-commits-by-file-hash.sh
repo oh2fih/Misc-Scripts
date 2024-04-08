@@ -68,18 +68,22 @@ cd "$(git rev-parse --show-toplevel)" \
 
 # Search for the hash & show stats of matching commits
 
+print_commit_and_checksum() {
+  while read -r commit; do
+    echo "${commit}:$(
+      git show "${commit}:${1}" 2> /dev/null \
+        | sha256sum \
+        | awk '{print $1}'
+    )"
+  done
+}
+
 matches=$(
   git log --oneline --no-abbrev-commit --follow -- "$2" \
     | awk '{print $1}' \
-    | while read -r commit; do
-        echo "$commit: $(
-          git show "$commit:$2" 2> /dev/null \
-            | sha256sum \
-            | awk '{print $1}'
-        )"
-      done \
-    | grep -E "[0-9a-f]*:\ $1"
-  )
+    | print_commit_and_checksum "$2" \
+    | grep -E "[0-9a-f]*:${1}"
+)
 
 if [[ "$matches" =~ [0-9a-f]+ ]]; then
   echo "$matches" \
