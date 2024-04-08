@@ -1,7 +1,7 @@
 #!/bin/bash
 read -r -d '' USAGE << EOM
 # ------------------------------------------------------------------------------
-# Search Git repository history for commits with SHA-256 hash of a file
+# Search Git repository history for commits with SHA-256 checksum of a file
 #
 #   Answers the question "Has this version of this file ever been
 #   committed as the file on this path of this Git repository?"
@@ -10,7 +10,7 @@ read -r -d '' USAGE << EOM
 # Usage: git-find-commits-by-file-hash.sh sha256sum path
 #
 # - The working directory should be inside a Git repository work tree.
-# - The sha256sum should be an full sha256sum hash of the file.
+# - The sha256sum should be an full sha256sum checksum of the file.
 # - The path should be relative to the repository root.
 #
 # Author : Esa Jokinen (oh2fih)
@@ -56,13 +56,13 @@ fi
 
 git rev-parse --is-inside-work-tree &> /dev/null \
   || {
-    echo -e "\033[0;31mNot inside a git repository!\033[0m" >&2 \
+    echo -e "\033[0;31mNot inside a git repository!\033[0m" >&2
     exit 1
   }
 
 cd "$(git rev-parse --show-toplevel)" \
   || {
-    echo -e "\033[0;31mUnable to change to the repository root!\033[0m" >&2 \
+    echo -e "\033[0;31mUnable to change to the repository root!\033[0m" >&2
     exit 1
   }
 
