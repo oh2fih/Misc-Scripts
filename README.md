@@ -18,7 +18,7 @@ Miscellaneous scripts for different purposes. Mostly unrelated to each other.
 | Web | <del>`koronarokotusaika.sh`</del> <br> Shell (bash) | This script has been removed as koronarokotusaika.fi (bookcovidvaccine.fi) has been shut down on April 28, 2023. |
 | Web | [`xxl-product-pricelimiter.sh`](bin/xxl-product-pricelimiter.sh) <br> Shell (bash) | XXL.fi product price checker / limiter. <br> `./xxl-product-pricelimiter.sh XXL.fi-ProductURL MaxPrice` |
 
-### Scripts that require `sudo` privileges ([`sbin/`](sbin/))
+## Scripts that require `sudo` privileges ([`sbin/`](sbin/))
 
 | Category | Script & Language | Purpose & Usage |
 |:---|:---|:---|
@@ -32,6 +32,6 @@ Miscellaneous scripts for different purposes. Mostly unrelated to each other.
 
 Interactive installer & updater `install.sh` and simple updater `update.sh` help putting the scripts in directories that are typically in your `$PATH`. While using these installers as root/sudo, you might need to add an exception for the repository with:
 
-```
+```bash
 sudo git config --global --add safe.directory <path>
 ```
