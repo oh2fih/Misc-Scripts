@@ -11,6 +11,9 @@ read -r -d '' USAGE << EOM
 #        Format: user tty (age)[: PID]
 #   -h   Help. Prints this and exits (ignoring all other options).
 #
+# This could be used as a workaround for OpenSSH < 9.2 that did not have
+# the sshd_config(5) keywords ChannelTimeout & UnusedConnectionTimeout.
+#
 # Author : Esa Jokinen (oh2fih)
 # Home   : https://github.com/oh2fih/Misc-Scripts
 # ------------------------------------------------------------------------------
