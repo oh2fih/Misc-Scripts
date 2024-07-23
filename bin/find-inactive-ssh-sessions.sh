@@ -51,6 +51,24 @@ while getopts ":hksi:" opt; do
   esac
 done
 
+# Get TTYs with the seconds since the last access time
+TTYS=$(
+    who -s \
+    | awk '{ print $2 }' \
+    | grep -ve "^:"
+  )
+if [ "$TTYS" = "" ]; then
+  echo "Suitable TTYs not found; no SSH sessions to find." >&2
+  exit 0
+fi
+
+TTY_AGES=$(
+  echo "$TTYS" \
+    | (cd /dev && xargs stat -c '%U %n %X') \
+    | awk '{ print $1"\t"$2"\t"'"$(date +%s)"'-$3 }'
+  )
+
+# Print header
 if (( KILL == 1 )); then
   echo "Killing sshd processes idle more than $MAX_IDLE seconds." >&2
 else
@@ -63,16 +81,7 @@ else
 fi
 echo "" >&2
 
-# Get TTYs with the seconds since the last access time
-TTY_AGES=$(
-  who -s \
-    | awk '{ print $2 }' \
-    | grep -ve "^:" \
-    | (cd /dev && xargs stat -c '%U %n %X') \
-    | awk '{ print $1"\t"$2"\t"'"$(date +%s)"'-$3 }'
-  )
-
-# Get sshd processes of the TTYs; print or kill (-k)
+# Get sshd processes of the TTYs; list or kill (-k)
 while IFS= read -r line ; do
   user=$(echo "$line" | awk '{print $1}')
   tty=$(echo "$line" | awk '{print $2}')
