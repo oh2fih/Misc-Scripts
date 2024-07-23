@@ -28,6 +28,9 @@ while getopts ":hksi:" opt; do
       ;;
     k)
       KILL=1
+      if [ "$EUID" -ne 0 ]; then
+        echo "Notice: Kill mode without sudo only kills your own sesions." >&2
+      fi
       ;;
     s)
       SESSIONS=1
@@ -50,6 +53,33 @@ while getopts ":hksi:" opt; do
       ;;
   esac
 done
+
+# Check for requirements. Print all unmet requirements at once.
+
+required_command() {
+  if ! command -v "$1" &> /dev/null; then
+    if [ -z ${2+x} ]; then
+      echo -e "\033[0;31mThis script requires ${1}!\033[0m" >&2
+    else
+      echo -e "\033[0;31mThis script requires ${1} ${2}!\033[0m" >&2
+    fi
+    ((UNMET=UNMET+1))
+  fi
+}
+
+UNMET=0
+
+required_command "pgrep" "for finding processes"
+required_command "pkill" "for finding & killing processes"
+required_command "who" "for listing TTYs"
+required_command "stat" "for TTY ages"
+required_command "xargs"
+required_command "awk"
+required_command "grep"
+
+if [ "$UNMET" -gt 0 ]; then
+  exit 1
+fi
 
 # Get TTYs with the seconds since the last access time
 TTYS=$(
