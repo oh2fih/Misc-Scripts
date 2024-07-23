@@ -73,8 +73,7 @@ if (( KILL == 1 )); then
   echo "Killing sshd processes idle more than $MAX_IDLE seconds." >&2
 else
   if (( SESSIONS == 1 )); then
-    echo "All sessions idle more than $MAX_IDLE seconds \
-      & their sshd processes:" >&2
+    echo "All sessions idle more than $MAX_IDLE seconds with sshd PIDs:" >&2
   else
     echo "sshd processes from sessions idle more than $MAX_IDLE seconds:" >&2
   fi
