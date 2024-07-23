@@ -83,7 +83,7 @@ matches=$(
     | awk '{print $1}' \
     | print_commit_and_checksum "$2" \
     | grep -E "[0-9a-f]*:${1}"
-)
+  )
 
 if [[ "$matches" =~ [0-9a-f]+ ]]; then
   echo "$matches" \

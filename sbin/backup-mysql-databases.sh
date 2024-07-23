@@ -55,7 +55,7 @@ date=$(date "+${DatePattern}")
 databases=$(
   mysql -N -B -e "SHOW DATABASES;" \
     | grep -E -v "$ExcludeDatabases"
-)
+  )
 
 echo "Working directory: $(pwd)"
 echo "Excluding databases: ${ExcludeDatabases}"

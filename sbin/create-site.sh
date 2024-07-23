@@ -89,8 +89,10 @@ letsencrypt_hostnames=""
 hostname_errors=0
 
 for hostname in "${@:2}"; do
-  validated_hostname=$(echo "$hostname" \
-    | grep -P '(?=^.{5,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)')
+  validated_hostname=$(
+    echo "$hostname" \
+      | grep -P '(?=^.{5,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)'
+    )
   if [ -z "$validated_hostname" ]; then
     echo "*** ERROR! $hostname is not valid!"
     ((hostname_errors=hostname_errors+1))

@@ -63,11 +63,11 @@ fi
 echo "" >&2
 
 # Get TTYs with the seconds since the last access time
-TTY_AGES=$( \
+TTY_AGES=$(
   who -s | awk '{ print $2 }' \
     | (cd /dev && xargs stat -c '%U %n %X') \
     | awk '{ print $1"\t"$2"\t"'"$(date +%s)"'-$3 }'
-)
+  )
 
 # Get sshd processes of the TTYs; print or kill (-k)
 while IFS= read -r line ; do

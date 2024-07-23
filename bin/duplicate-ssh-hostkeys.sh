@@ -123,10 +123,12 @@ echo -e "\n\033[0;32mSearching duplicate hostkeys...\033[0m\n" >&2
 
 hostkeys=$(grep "debug1: Server host key" "$tmpdir"/ssh-*.log)
 
-duplicatekeys=$(echo "$hostkeys" \
-  | awk '{ print $5" "$6; }' \
-  | sort \
-  | uniq -d)
+duplicatekeys=$(
+  echo "$hostkeys" \
+    | awk '{ print $5" "$6; }' \
+    | sort \
+    | uniq -d
+  )
 
 if [ -n "$duplicatekeys" ]; then
   echo -e "Duplicate host keys found in ${1}!\n"

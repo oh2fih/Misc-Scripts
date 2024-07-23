@@ -54,7 +54,7 @@ TOINSTALL=$(
     "Choose the Misc-Scripts to be installed,\nbin => ${BIN}" \
     "$HEIGHT" "$WIDTH" "$MENUCOUNT" \
     "${MENULIST[@]}" 3>&1 1>&2 2>&3
-)
+  )
 exitstatus=$?
 if [ "$exitstatus" -ne 0 ]; then
   printf "Aborting...\n"
@@ -83,7 +83,7 @@ TOINSTALL+=$(
     "Choose the Misc-Scripts to be installed,\nsbin => ${SBIN}" \
     "$HEIGHT" "$WIDTH" "$MENUCOUNT" \
     "${MENULIST[@]}" 3>&1 1>&2 2>&3
-)
+  )
 exitstatus=$?
 if [ "$exitstatus" -ne 0 ]; then
   printf "Aborting...\n"
