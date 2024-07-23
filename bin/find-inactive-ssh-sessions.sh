@@ -55,7 +55,8 @@ if (( KILL == 1 )); then
   echo "Killing sshd processes idle more than $MAX_IDLE seconds." >&2
 else
   if (( SESSIONS == 1 )); then
-    echo "All sessions idle more than $MAX_IDLE seconds & their sshd processes:" >&2
+    echo "All sessions idle more than $MAX_IDLE seconds \
+      & their sshd processes:" >&2
   else
     echo "sshd processes from sessions idle more than $MAX_IDLE seconds:" >&2
   fi
@@ -64,7 +65,9 @@ echo "" >&2
 
 # Get TTYs with the seconds since the last access time
 TTY_AGES=$(
-  who -s | awk '{ print $2 }' \
+  who -s \
+    | awk '{ print $2 }' \
+    | grep -ve "^:" \
     | (cd /dev && xargs stat -c '%U %n %X') \
     | awk '{ print $1"\t"$2"\t"'"$(date +%s)"'-$3 }'
   )
