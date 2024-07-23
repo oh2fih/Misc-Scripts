@@ -82,6 +82,7 @@ if [ "$UNMET" -gt 0 ]; then
 fi
 
 # Get TTYs with the seconds since the last access time
+
 TTYS=$(
   who -s \
     | awk '{ print $2 }' \
@@ -99,6 +100,7 @@ TTY_AGES=$(
   )
 
 # Print header
+
 if (( KILL == 1 )); then
   echo "Killing sshd processes idle more than $MAX_IDLE seconds." >&2
 else
@@ -111,6 +113,7 @@ fi
 echo "" >&2
 
 # Get sshd processes of the TTYs; list or kill (-k)
+
 while IFS= read -r line ; do
   user=$(echo "$line" | awk '{print $1}')
   tty=$(echo "$line" | awk '{print $2}')
