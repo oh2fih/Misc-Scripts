@@ -83,7 +83,7 @@ fi
 
 # Get TTYs with the seconds since the last access time
 TTYS=$(
-    who -s \
+  who -s \
     | awk '{ print $2 }' \
     | grep -ve "^:"
   )
