@@ -34,7 +34,7 @@ CACHE="${CACHE:-.detect-modifier-html-element-sha512sum}"
 # Fake user-agent for curl
 
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-UA+="(KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36"
+UA+="(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 
 # Check for requirements. Print all unmet requirements at once.
 
