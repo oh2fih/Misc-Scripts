@@ -197,14 +197,20 @@ def generate_summary(cve: dict) -> str:
                 pass
 
     vendor = ""
-    product = ""
     try:
         vendor = cve["containers"]["adp"][0]["affected"][0]["vendor"]
-        product = cve["containers"]["adp"][0]["affected"][0]["product"]
     except:
         try:
             if cve["containers"]["cna"]["affected"][0]["vendor"] != "n/a":
                 vendor = cve["containers"]["cna"]["affected"][0]["vendor"]
+        except:
+            pass
+
+    product = ""
+    try:
+        product = cve["containers"]["adp"][0]["affected"][0]["product"]
+    except:
+        try:
             if cve["containers"]["cna"]["affected"][0]["product"] != "n/a":
                 product = cve["containers"]["cna"]["affected"][0]["product"]
         except:
