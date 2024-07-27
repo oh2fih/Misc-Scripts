@@ -181,13 +181,20 @@ def cvss31score(cve: dict) -> float:
 
 def generate_summary(cve: dict) -> str:
     """Generates summary from title & affected product"""
+    title = ""
     try:
         title = f"{cve['containers']['cna']['title']} "
     except:
         try:
-            title = f"{cve['containers']['adp'][0]['title']} "
+            for description in cve["containers"]["cna"]["descriptions"]:
+                if description["lang"] in ("en", "en-US", "en_US"):
+                    title = f"{description['value']} "
+                    break
         except:
-            title = ""
+            try:
+                title = f"{cve['containers']['adp'][0]['title']} "
+            except:
+                pass
 
     vendor = ""
     product = ""
