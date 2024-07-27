@@ -125,10 +125,6 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
         if "delta" in path:
             continue
 
-        # Skip files outside cve
-        if "cve" not in path:
-            continue
-
         if type == "D":
             if colors:
                 print(
@@ -270,7 +266,7 @@ def generate_summary(cve: dict) -> str:
 def changed_files(current_commit: str, past_commit: str) -> list:
     """List files changed between two commits"""
     result = subprocess.Popen(
-        ["git", "diff", "--name-status", past_commit, current_commit],
+        ["git", "diff", "--name-status", past_commit, current_commit, "cves/"],
         stdout=subprocess.PIPE,
     )
     return result.stdout.readlines()
