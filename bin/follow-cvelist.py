@@ -221,16 +221,19 @@ def cvss31score(cve: dict) -> float:
 def generate_summary(cve: dict) -> str:
     """Generates summary from title & affected product"""
     title = ""
+    description = ""
     try:
         title = cve["containers"]["cna"]["title"]
     except:
         try:
             for description in cve["containers"]["cna"]["descriptions"]:
                 if description["lang"] in ("en", "en-US", "en_US"):
-                    title = description["value"]
+                    description = description["value"]
+                    title = ""
                     break
         except:
             try:
+                # This is not a very good title, but a last resort.
                 title = cve["containers"]["adp"][0]["title"]
             except:
                 pass
@@ -255,8 +258,14 @@ def generate_summary(cve: dict) -> str:
         except:
             pass
 
+    # Title is typically short and likely contains the vendor and product, whereas
+    # description can tell a long story in any order. Therefore, we get the most
+    # informative view when title comes before vendor:product but after description.
     if title == "":
-        return f"[{vendor}: {product}]"
+        if vendor != "" or product != "":
+            return f"[{vendor}: {product}] {description}"
+        else:
+            return description
     elif vendor != "" or product != "":
         return f"{title} [{vendor}: {product}]"
     else:
