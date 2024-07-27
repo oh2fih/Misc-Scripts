@@ -27,7 +27,7 @@ def main(args):
     # Handle keyboard interruptions
     signal.signal(signal.SIGINT, interrupt_handler)
     # Handle termination signals
-    signal.signal(signal.SIGINT, interrupt_handler)
+    signal.signal(signal.SIGTERM, interrupt_handler)
 
     try:
         subprocess.call(
