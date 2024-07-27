@@ -213,7 +213,7 @@ def generate_summary(cve: dict) -> str:
     if title == "":
         return f"[{vendor}: {product}]"
     elif vendor != "" or product != "":
-        return f"{title}[{vendor}: {product}]"
+        return f"{title} [{vendor}: {product}]"
     else:
         return title
 
