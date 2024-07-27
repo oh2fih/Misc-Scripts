@@ -138,7 +138,9 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
                 modified = re.sub(r"T", " ", modified)
                 cve = current["cveMetadata"]["cveId"]
             except (KeyError, TypeError):
-                print(f"Unexpected structure in {path}", file=sys.stderr)
+                print(
+                    f"Unexpected structure in {current_commit} {path}", file=sys.stderr
+                )
                 continue
 
             if type == "M":
@@ -148,7 +150,9 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
                     past = json_at_commit(path, past_commit)
                     past_cvss = cvss31score(past)
                 except TypeError:
-                    print(f"Unexpected structure in (past) {path}", file=sys.stderr)
+                    print(
+                        f"Unexpected structure in {past_commit} {path}", file=sys.stderr
+                    )
                     past_cvss = "   "
             else:
                 if colors:
@@ -285,7 +289,7 @@ def changed_files(current_commit: str, past_commit: str) -> list:
             past_commit,
             current_commit,
             "cves/",
-            "':!cves/delta*'",
+            ":!cves/delta*",
         ],
         stdout=subprocess.PIPE,
     )
