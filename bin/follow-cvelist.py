@@ -49,7 +49,10 @@ def main(args):
         f"{'CVSS 3.1'.ljust(10)} SUMMARY [vendor: product]",
         file=sys.stderr,
     )
-    print(f"{''.ljust(os.get_terminal_size()[0], '-')}", file=sys.stderr)
+    try:
+        print(f"{''.ljust(os.get_terminal_size()[0], '-')}", file=sys.stderr)
+    except:
+        print(f"{''.ljust(80, '-')}", file=sys.stderr)
 
     monitor(args)
 
@@ -79,10 +82,7 @@ def monitor(agrs):
         new_cursor = get_cursor()
 
         if new_cursor != cursor:
-            if args.ansi:
-                print_changes_color(new_cursor, cursor)
-            else:
-                print_changes(new_cursor, cursor)
+            print_changes(new_cursor, cursor, colors=args.ansi)
 
         cursor = new_cursor
 
@@ -106,75 +106,16 @@ def get_cursor(offset: int = 0) -> str:
     return result.stdout.decode("utf-8").strip()
 
 
-def print_changes(current_commit: str, past_commit: str):
+def print_changes(current_commit: str, past_commit: str, colors: bool = False):
     """Print summary of changed CVE"""
     lines = []
-    width = os.get_terminal_size()[0]
-
-    for file in changed_files(current_commit, past_commit):
-        type = re.split(r"\t+", file.decode("utf-8").strip())[0]
-        path = re.split(r"\t+", file.decode("utf-8").strip())[1]
-
-        # Skip delta files
-        if "delta" in path:
-            continue
-
-        # Skip files outside cve
-        if "cve" not in path:
-            continue
-
-        if type == "D":
-            print(f"Deleted: {Path(path).stem}", file=sys.stderr)
+    try:
+        if colors:
+            width = os.get_terminal_size()[0] + 21
         else:
-            try:
-                current = json_at_commit(path, current_commit)
-                modified = current["cveMetadata"]["dateUpdated"]
-                modified = re.sub(r"\..*", "", modified)
-                modified = re.sub(r"T", " ", modified)
-                cve = current["cveMetadata"]["cveId"]
-            except (KeyError, TypeError):
-                continue
-
-            if type == "M":
-                try:
-                    past = json_at_commit(path, past_commit)
-                    past_cvss = cvss31score(past)
-                except TypeError:
-                    print(f"Unexpected structure in (past) {path}", file=sys.stderr)
-                    past_cvss = "   "
-            else:
-                past_cvss = "   "
-
-            current_cvss = cvss31score(current)
-
-            if current_cvss == 0.0:
-                current_cvss = "   "
-            if past_cvss == 0.0:
-                past_cvss = "   "
-
-            if current_cvss != past_cvss:
-                cvss = f"{past_cvss} → {current_cvss}"
-            else:
-                cvss = f"{current_cvss}"
-
-            summary = re.sub(r"\n", " ", generate_summary(current))
-
-            lines.append(
-                f"{modified.ljust(20)} {cve.ljust(15)} {cvss.ljust(10)} {summary}"
-            )
-
-    lines.sort()
-
-    for line in lines:
-        print(line[:width])
-
-
-def print_changes_color(current_commit: str, past_commit: str):
-    """Print summary of changed CVE with ANSI colors"""
-    lines = []
-
-    # adjust screen width to the ansi colors in CVSS
-    width = os.get_terminal_size()[0] + 21
+            width = os.get_terminal_size()[0]
+    except:
+        width = False
 
     for file in changed_files(current_commit, past_commit):
         type = re.split(r"\t+", file.decode("utf-8").strip())[0]
@@ -189,9 +130,13 @@ def print_changes_color(current_commit: str, past_commit: str):
             continue
 
         if type == "D":
-            print(
-                f"{ansi('red')}Deleted: {Path(path).stem}{ansi('end')}", file=sys.stderr
-            )
+            if colors:
+                print(
+                    f"{ansi('red')}Deleted: {Path(path).stem}{ansi('end')}",
+                    file=sys.stderr,
+                )
+            else:
+                print(f"Deleted: {Path(path).stem}", file=sys.stderr)
         else:
             try:
                 current = json_at_commit(path, current_commit)
@@ -204,30 +149,33 @@ def print_changes_color(current_commit: str, past_commit: str):
                 continue
 
             if type == "M":
-                cve = f"{ansi('bright_blue')}{cve}{ansi('end')}"
+                if colors:
+                    cve = f"{ansi('bright_blue')}{cve}{ansi('end')}"
                 try:
                     past = json_at_commit(path, past_commit)
                     past_cvss = cvss31score(past)
                 except TypeError:
                     print(f"Unexpected structure in (past) {path}", file=sys.stderr)
-                    past_cvss = f"  "
+                    past_cvss = "   "
             else:
-                cve = f"{ansi('bright_cyan')}{cve}{ansi('end')}"
+                if colors:
+                    cve = f"{ansi('bright_cyan')}{cve}{ansi('end')}"
                 past_cvss = "   "
 
             current_cvss = cvss31score(current)
 
-            END = ansi("end")
-            if current_cvss >= 9.0:
-                COLOR = ansi("bright_red", "bold")
-            elif current_cvss >= 7.0:
-                COLOR = ansi("red")
-            elif current_cvss >= 4.0:
-                COLOR = ansi("yellow")
-            elif current_cvss >= 0.1:
-                COLOR = ansi("green")
-            else:
-                COLOR = f"{END}\000\000\000"
+            if colors:
+                END = ansi("end")
+                if current_cvss >= 9.0:
+                    COLOR = ansi("bright_red", "bold")
+                elif current_cvss >= 7.0:
+                    COLOR = ansi("red")
+                elif current_cvss >= 4.0:
+                    COLOR = ansi("yellow")
+                elif current_cvss >= 0.1:
+                    COLOR = ansi("green")
+                else:
+                    COLOR = f"{END}\000\000\000"
 
             if current_cvss == 0.0:
                 current_cvss = "   "
@@ -235,20 +183,34 @@ def print_changes_color(current_commit: str, past_commit: str):
                 past_cvss = "   "
 
             if current_cvss != past_cvss:
-                cvss = f"{past_cvss} {COLOR}→ {current_cvss}{END}"
+                if colors:
+                    cvss = f"{past_cvss} {COLOR}→ {current_cvss}{END}"
+                else:
+                    cvss = f"{past_cvss} → {current_cvss}"
             else:
-                cvss = f"{COLOR}{current_cvss}{END}"
+                if colors:
+                    cvss = f"{COLOR}{current_cvss}{END}"
+                else:
+                    cvss = f"{current_cvss}"
 
             summary = re.sub(r"\n", " ", generate_summary(current))
 
-            lines.append(
-                f"{modified.ljust(20)} {cve.ljust(26)} {cvss.ljust(21)} {summary}"
-            )
+            if colors:
+                lines.append(
+                    f"{modified.ljust(20)} {cve.ljust(26)} {cvss.ljust(21)} {summary}"
+                )
+            else:
+                lines.append(
+                    f"{modified.ljust(20)} {cve.ljust(15)} {cvss.ljust(10)} {summary}"
+                )
 
     lines.sort()
 
     for line in lines:
-        print(line[:width])
+        if width:
+            print(line[:width])
+        else:
+            print(line)
 
 
 def cvss31score(cve: dict) -> float:
