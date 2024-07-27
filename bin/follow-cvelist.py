@@ -119,18 +119,29 @@ def print_changes(current_commit: str, past_commit: str):
         if "delta" in path:
             continue
 
+        # Skip files outside cve
+        if "cve" not in path:
+            continue
+
         if type == "D":
             print(f"Deleted: {Path(path).stem}", file=sys.stderr)
         else:
-            current = json_at_commit(path, current_commit)
-            modified = current["cveMetadata"]["dateUpdated"]
-            modified = re.sub(r"\..*", "", modified)
-            modified = re.sub(r"T", " ", modified)
-            cve = current["cveMetadata"]["cveId"]
+            try:
+                current = json_at_commit(path, current_commit)
+                modified = current["cveMetadata"]["dateUpdated"]
+                modified = re.sub(r"\..*", "", modified)
+                modified = re.sub(r"T", " ", modified)
+                cve = current["cveMetadata"]["cveId"]
+            except (KeyError, TypeError):
+                continue
 
             if type == "M":
-                past = json_at_commit(path, past_commit)
-                past_cvss = cvss31score(past)
+                try:
+                    past = json_at_commit(path, past_commit)
+                    past_cvss = cvss31score(past)
+                except TypeError:
+                    print(f"Unexpected structure in (past) {path}", file=sys.stderr)
+                    past_cvss = "   "
             else:
                 past_cvss = "   "
 
@@ -173,21 +184,33 @@ def print_changes_color(current_commit: str, past_commit: str):
         if "delta" in path:
             continue
 
+        # Skip files outside cve
+        if "cve" not in path:
+            continue
+
         if type == "D":
             print(
                 f"{ansi('red')}Deleted: {Path(path).stem}{ansi('end')}", file=sys.stderr
             )
         else:
-            current = json_at_commit(path, current_commit)
-            modified = current["cveMetadata"]["dateUpdated"]
-            modified = re.sub(r"\..*", "", modified)
-            modified = re.sub(r"T", " ", modified)
-            cve = current["cveMetadata"]["cveId"]
+            try:
+                current = json_at_commit(path, current_commit)
+                modified = current["cveMetadata"]["dateUpdated"]
+                modified = re.sub(r"\..*", "", modified)
+                modified = re.sub(r"T", " ", modified)
+                cve = current["cveMetadata"]["cveId"]
+            except (KeyError, TypeError):
+                print(f"Unexpected structure in {path}", file=sys.stderr)
+                continue
 
             if type == "M":
                 cve = f"{ansi('bright_blue')}{cve}{ansi('end')}"
-                past = json_at_commit(path, past_commit)
-                past_cvss = cvss31score(past)
+                try:
+                    past = json_at_commit(path, past_commit)
+                    past_cvss = cvss31score(past)
+                except TypeError:
+                    print(f"Unexpected structure in (past) {path}", file=sys.stderr)
+                    past_cvss = f"  "
             else:
                 cve = f"{ansi('bright_cyan')}{cve}{ansi('end')}"
                 past_cvss = "   "
@@ -300,7 +323,9 @@ def json_at_commit(path: Path, commit: str) -> dict:
         data = json.loads(result.stdout.decode("utf-8"))
         return data
     except IOError:
-        print(f"Could not open {path}", file=sys.stderr)
+        print(f"Could not open {commit}:{path}", file=sys.stderr)
+    except json.decoder.JSONDecodeError:
+        print(f"Could not parse {commit}:{path}", file=sys.stderr)
 
 
 def cvelist_repo():
