@@ -3,11 +3,12 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-h] [-i s] [-c N]
+# Usage: follow-cvelist.py [-h] [-i s] [-c N] [-a]
 #
 #  -h, --help          show this help message and exit
 #  -i s, --interval s  pull interval in seconds
 #  -c N, --commits N   amount of commits to include in the initial print
+#  -a, --ansi          add ansi colors to the output (default: False)
 #
 # Requires git. Working directory must be the root of the cvelistV5 repository.
 #
@@ -50,7 +51,7 @@ def main(args):
     )
     print(f"{''.ljust(os.get_terminal_size()[0], '-')}", file=sys.stderr)
 
-    monitor(get_cursor(args.commits), args.interval)
+    monitor(args)
 
 
 def interrupt_handler(signum, frame):
@@ -69,18 +70,23 @@ def check_interrupt():
         sys.exit(0)
 
 
-def monitor(cursor: str, interval: int):
+def monitor(agrs):
     """Monitors cvelistV5 commits and prints changed CVEs"""
+    cursor = get_cursor(args.commits)
+
     while True:
         pull()
         new_cursor = get_cursor()
 
         if new_cursor != cursor:
-            print_changes(new_cursor, cursor)
+            if args.ansi:
+                print_changes_color(new_cursor, cursor)
+            else:
+                print_changes(new_cursor, cursor)
 
         cursor = new_cursor
 
-        for x in range(interval):
+        for x in range(args.interval):
             check_interrupt()
             time.sleep(1)
 
@@ -102,6 +108,58 @@ def get_cursor(offset: int = 0) -> str:
 
 def print_changes(current_commit: str, past_commit: str):
     """Print summary of changed CVE"""
+    lines = []
+    width = os.get_terminal_size()[0]
+
+    for file in changed_files(current_commit, past_commit):
+        type = re.split(r"\t+", file.decode("utf-8").strip())[0]
+        path = re.split(r"\t+", file.decode("utf-8").strip())[1]
+
+        # Skip delta files
+        if "delta" in path:
+            continue
+
+        if type == "D":
+            print(f"Deleted: {Path(path).stem}", file=sys.stderr)
+        else:
+            current = json_at_commit(path, current_commit)
+            modified = current["cveMetadata"]["dateUpdated"]
+            modified = re.sub(r"\..*", "", modified)
+            modified = re.sub(r"T", " ", modified)
+            cve = current["cveMetadata"]["cveId"]
+
+            if type == "M":
+                past = json_at_commit(path, past_commit)
+                past_cvss = cvss31score(past)
+            else:
+                past_cvss = "   "
+
+            current_cvss = cvss31score(current)
+
+            if current_cvss == 0.0:
+                current_cvss = "   "
+            if past_cvss == 0.0:
+                past_cvss = "   "
+
+            if current_cvss != past_cvss:
+                cvss = f"{past_cvss} → {current_cvss}"
+            else:
+                cvss = f"{current_cvss}"
+
+            summary = re.sub(r"\n", " ", generate_summary(current))
+
+            lines.append(
+                f"{modified.ljust(20)} {cve.ljust(15)} {cvss.ljust(10)} {summary}"
+            )
+
+    lines.sort()
+
+    for line in lines:
+        print(line[:width])
+
+
+def print_changes_color(current_commit: str, past_commit: str):
+    """Print summary of changed CVE with ANSI colors"""
     lines = []
 
     # adjust screen width to the ansi colors in CVSS
@@ -329,6 +387,13 @@ if __name__ == "__main__":
         metavar="N",
         help="amount of commits to include in the initial print",
         default=30,
+    )
+    argParser.add_argument(
+        "-a",
+        "--ansi",
+        action="store_true",
+        help="add ansi colors to the output",
+        default=False,
     )
     args = argParser.parse_args()
     main(args)
