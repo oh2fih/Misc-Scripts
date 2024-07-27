@@ -83,8 +83,7 @@ def monitor(agrs):
 
         if new_cursor != cursor:
             print_changes(new_cursor, cursor, colors=args.ansi)
-
-        cursor = new_cursor
+            cursor = new_cursor
 
         for x in range(args.interval):
             check_interrupt()
@@ -215,7 +214,7 @@ def cvss31score(cve: dict) -> float:
 
 
 def generate_summary(cve: dict) -> str:
-    """Generates summary from title & affected product"""
+    """Generates summary from title or description & affected vendor/product"""
     title = ""
     description = ""
     try:
