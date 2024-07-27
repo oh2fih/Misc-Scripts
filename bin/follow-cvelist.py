@@ -205,11 +205,17 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
 
 
 def cvss31score(cve: dict) -> float:
-    """Gets CVSS 3.1 Score"""
+    """Gets CVSS 3.1 Score. If CVSS score is present in both containers, take higher"""
     try:
-        cvss = cve["containers"]["adp"][0]["metrics"][0]["cvssV3_1"]["baseScore"]
+        cvss_adp = cve["containers"]["adp"][0]["metrics"][0]["cvssV3_1"]["baseScore"]
     except:
-        cvss = 0.0
+        cvss_adp = 0.0
+    try:
+        cvss_cna = cve["containers"]["cna"]["metrics"][0]["cvssV3_1"]["baseScore"]
+    except:
+        cvss_cna = 0.0
+
+    cvss = max(cvss_adp, cvss_cna)
     return float("%0.1f" % cvss)
 
 
