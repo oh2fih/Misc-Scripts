@@ -22,22 +22,6 @@ from pathlib import Path
 INTERRUPT = None
 
 
-def check_interrupt():
-    """Exits if interrupt is received"""
-    if INTERRUPT:
-        print(
-            f"Exiting after receiving {signal.Signals(INTERRUPT).name}...",
-            file=sys.stderr,
-        )
-        sys.exit(0)
-
-
-def interrupt_handler(signum, frame):
-    """Tells that an interrupt signal is received through global variable INTERRUPT"""
-    global INTERRUPT
-    INTERRUPT = signum
-
-
 def main(args):
     # Handle keyboard interruptions
     signal.signal(signal.SIGINT, interrupt_handler)
@@ -67,6 +51,22 @@ def main(args):
     print(f"{''.ljust(os.get_terminal_size()[0], '-')}", file=sys.stderr)
 
     monitor(get_cursor(args.commits), args.interval)
+
+
+def interrupt_handler(signum, frame):
+    """Tells that an interrupt signal is received through global variable INTERRUPT"""
+    global INTERRUPT
+    INTERRUPT = signum
+
+
+def check_interrupt():
+    """Exits if interrupt is received"""
+    if INTERRUPT:
+        print(
+            f"Exiting after receiving {signal.Signals(INTERRUPT).name}...",
+            file=sys.stderr,
+        )
+        sys.exit(0)
 
 
 def monitor(cursor: str, interval: int):
