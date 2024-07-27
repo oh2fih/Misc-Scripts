@@ -93,6 +93,7 @@ def pull():
 
 
 def get_cursor(offset: int = 0) -> str:
+    """Gets commit id at the offset from the current head"""
     result = subprocess.run(
         ["git", "rev-parse", "--verify", f"HEAD~{offset}"], stdout=subprocess.PIPE
     )
@@ -101,7 +102,6 @@ def get_cursor(offset: int = 0) -> str:
 
 def print_changes(current_commit: str, past_commit: str):
     """Print summary of changed CVE"""
-
     lines = []
 
     # adjust screen width to the ansi colors in CVSS
