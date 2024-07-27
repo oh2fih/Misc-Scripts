@@ -110,9 +110,11 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
     lines = []
     try:
         if colors:
+            # add extra width for invisible characters (ANSI codes)
             width = os.get_terminal_size()[0] + 21
         else:
-            width = os.get_terminal_size()[0]
+            # substract one character to fit occasional wide characters like emojis
+            width = os.get_terminal_size()[0] - 1
     except:
         width = False
 
