@@ -183,22 +183,21 @@ def generate_summary(cve: dict) -> str:
     """Generates summary from title & affected product"""
     title = ""
     try:
-        title = f"{cve['containers']['cna']['title']} "
+        title = cve["containers"]["cna"]["title"]
     except:
         try:
             for description in cve["containers"]["cna"]["descriptions"]:
                 if description["lang"] in ("en", "en-US", "en_US"):
-                    title = f"{description['value']} "
+                    title = description["value"]
                     break
         except:
             try:
-                title = f"{cve['containers']['adp'][0]['title']} "
+                title = cve["containers"]["adp"][0]["title"]
             except:
                 pass
 
     vendor = ""
     product = ""
-
     try:
         vendor = cve["containers"]["adp"][0]["affected"][0]["vendor"]
         product = cve["containers"]["adp"][0]["affected"][0]["product"]
@@ -211,7 +210,9 @@ def generate_summary(cve: dict) -> str:
         except:
             pass
 
-    if vendor != "" or product != "":
+    if title == "":
+        return f"[{vendor}: {product}]"
+    elif vendor != "" or product != "":
         return f"{title}[{vendor}: {product}]"
     else:
         return title
