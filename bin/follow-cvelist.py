@@ -3,12 +3,13 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-h] [-i s] [-c N] [-a]
+# Usage: follow-cvelist.py [-h] [-i s] [-c N] [-a] [-v]
 #
 #  -h, --help          show this help message and exit
 #  -i s, --interval s  pull interval in seconds
 #  -c N, --commits N   amount of commits to include in the initial print
 #  -a, --ansi          add ansi colors to the output (default: False)
+#  -v, --verbose       show verbose information on git pull (default: False)
 #
 # Requires git. Working directory must be the root of the cvelistV5 repository.
 #
@@ -78,10 +79,15 @@ def monitor(agrs):
     cursor = get_cursor(args.commits)
 
     while True:
-        pull()
+        pull(args.verbose)
         new_cursor = get_cursor()
 
         if new_cursor != cursor:
+            if args.verbose:
+                print(
+                    f"[{cursor} → {new_cursor}]",
+                    file=sys.stderr,
+                )
             print_changes(new_cursor, cursor, colors=args.ansi)
             cursor = new_cursor
 
@@ -90,11 +96,14 @@ def monitor(agrs):
             time.sleep(1)
 
 
-def pull():
+def pull(verbose: bool = False):
     """Runs git pull"""
-    subprocess.call(
-        ["git", "pull"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-    )
+    if verbose:
+        subprocess.call(["git", "pull"])
+    else:
+        subprocess.call(
+            ["git", "pull"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+        )
 
 
 def get_cursor(offset: int = 0) -> str:
@@ -400,6 +409,13 @@ if __name__ == "__main__":
         "--ansi",
         action="store_true",
         help="add ansi colors to the output",
+        default=False,
+    )
+    argParser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="show verbose information on git pull",
         default=False,
     )
     args = argParser.parse_args()
