@@ -3,13 +3,14 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-h] [-i s] [-c N] [-a] [-v]
+# Usage: follow-cvelist.py [-h] [-i s] [-c N] [-o] [-a] [-u] [-v]
 #
 #  -h, --help          show this help message and exit
 #  -i s, --interval s  pull interval in seconds
 #  -c N, --commits N   amount of commits to include in the initial print
 #  -o, --once          only the current tail; no active follow (default: False)
 #  -a, --ansi          add ansi colors to the output (default: False)
+#  -u, --url           prefix cve with url to nvd nist details (default: False)
 #  -v, --verbose       show verbose information on git pull (default: False)
 #
 # Requires git. Working directory must be the root of the cvelistV5 repository.
@@ -20,6 +21,9 @@
 
 import argparse, json, os, re, sys, signal, subprocess, time
 from pathlib import Path
+
+# URL prefix for --url mode
+URL_PREFIX = "https://nvd.nist.gov/vuln/detail/"
 
 # Variable used for interruption handling
 INTERRUPT = None
@@ -46,8 +50,14 @@ def main(args):
         exit(1)
 
     # Header
+    if args.url:
+        cve_title = "URL to CVE details"
+        prefixlen = len(URL_PREFIX)
+    else:
+        cve_title = "CVE ID"
+        prefixlen = 0
     print(
-        f"{'TIME (UTC)'.ljust(20)} {'CVE'.ljust(15)} "
+        f"{'TIME (UTC)'.ljust(20)} {cve_title.ljust(15+prefixlen)} "
         f"{'CVSS 3.1'.ljust(10)} SUMMARY [vendor: product]",
         file=sys.stderr,
     )
@@ -90,7 +100,7 @@ def history(args):
                 f"[{cursor} → {new_cursor}]",
                 file=sys.stderr,
             )
-        print_changes(new_cursor, cursor, colors=args.ansi)
+        print_changes(new_cursor, cursor, args)
         cursor = new_cursor
         check_interrupt()
 
@@ -113,7 +123,7 @@ def monitor(agrs):
                     f"[{cursor} → {new_cursor}]",
                     file=sys.stderr,
                 )
-            print_changes(new_cursor, cursor, colors=args.ansi)
+            print_changes(new_cursor, cursor, args)
             cursor = new_cursor
 
 
@@ -135,8 +145,11 @@ def get_cursor(offset: int = 0) -> str:
     return result.stdout.decode("utf-8").strip()
 
 
-def print_changes(current_commit: str, past_commit: str, colors: bool = False):
+def print_changes(current_commit: str, past_commit: str, args):
     """Print summary of changed CVE"""
+    colors = args.ansi
+    url = args.url
+
     lines = []
     try:
         if colors:
@@ -147,6 +160,11 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
             width = os.get_terminal_size()[0] - 1
     except:
         width = False
+
+    if url:
+        prefixlen = len(URL_PREFIX)
+    else:
+        prefixlen = 0
 
     for file in changed_files(current_commit, past_commit):
         type = re.split(r"\t+", file.decode("utf-8").strip())[0]
@@ -172,6 +190,9 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
                     f"Unexpected structure in {current_commit}:{path}", file=sys.stderr
                 )
                 continue
+
+            if url:
+                cve = f"{URL_PREFIX}{cve}"
 
             if type == "M":
                 if colors:
@@ -224,11 +245,13 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
 
             if colors:
                 lines.append(
-                    f"{modified.ljust(20)} {cve.ljust(26)} {cvss.ljust(21)} {summary}"
+                    f"{modified.ljust(20)} {cve.ljust(26+prefixlen)} "
+                    f"{cvss.ljust(21)} {summary}"
                 )
             else:
                 lines.append(
-                    f"{modified.ljust(20)} {cve.ljust(15)} {cvss.ljust(10)} {summary}"
+                    f"{modified.ljust(20)} {cve.ljust(15+prefixlen)} "
+                    f"{cvss.ljust(10)} {summary}"
                 )
 
     lines.sort()
@@ -446,7 +469,7 @@ if __name__ == "__main__":
         "-o",
         "--once",
         action="store_true",
-        help="only the current tail; no active follow (default: False)",
+        help="only the current tail; no active follow",
         default=False,
     )
     argParser.add_argument(
@@ -454,6 +477,13 @@ if __name__ == "__main__":
         "--ansi",
         action="store_true",
         help="add ansi colors to the output",
+        default=False,
+    )
+    argParser.add_argument(
+        "-u",
+        "--url",
+        action="store_true",
+        help="prefix cve with url to nvd nist details",
         default=False,
     )
     argParser.add_argument(
