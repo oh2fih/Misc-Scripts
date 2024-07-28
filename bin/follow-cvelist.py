@@ -148,7 +148,7 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
                 cve = current["cveMetadata"]["cveId"]
             except (KeyError, TypeError):
                 print(
-                    f"Unexpected structure in {current_commit} {path}", file=sys.stderr
+                    f"Unexpected structure in {current_commit}:{path}", file=sys.stderr
                 )
                 continue
 
@@ -160,7 +160,7 @@ def print_changes(current_commit: str, past_commit: str, colors: bool = False):
                     past_cvss = cvss31score(past)
                 except TypeError:
                     print(
-                        f"Unexpected structure in {past_commit} {path}", file=sys.stderr
+                        f"Unexpected structure in {past_commit}:{path}", file=sys.stderr
                     )
                     past_cvss = "   "
             else:
@@ -342,7 +342,7 @@ def cvelist_repo():
 
 
 def ansi(color: str, style: str = "normal") -> str:
-    """Convert color to ANSI code"""
+    """Convert color & optional style to ANSI code"""
     sgr = {
         "normal": 0,
         "bold": 1,
@@ -368,7 +368,7 @@ def ansi(color: str, style: str = "normal") -> str:
         "bright_cyan": f"\033[{sgr[style]};96m",
         "bright_white": f"\033[{sgr[style]};97m",
     }
-    if color in ansi:
+    if color in ansi and style in sgr:
         return ansi[color.lower()]
     else:
         return ansi["end"]
