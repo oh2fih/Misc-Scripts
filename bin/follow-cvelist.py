@@ -8,6 +8,7 @@
 #  -h, --help          show this help message and exit
 #  -i s, --interval s  pull interval in seconds
 #  -c N, --commits N   amount of commits to include in the initial print
+#  -o, --once          only the current tail; no active follow (default: False)
 #  -a, --ansi          add ansi colors to the output (default: False)
 #  -v, --verbose       show verbose information on git pull (default: False)
 #
@@ -57,7 +58,8 @@ def main(args):
 
     pull(args.verbose)
     history(args)
-    monitor(args)
+    if not args.once:
+        monitor(args)
 
 
 def interrupt_handler(signum, frame):
@@ -422,6 +424,13 @@ if __name__ == "__main__":
         metavar="N",
         help="amount of commits to include in the initial print",
         default=30,
+    )
+    argParser.add_argument(
+        "-o",
+        "--once",
+        action="store_true",
+        help="only the current tail; no active follow (default: False)",
+        default=False,
     )
     argParser.add_argument(
         "-a",
