@@ -91,6 +91,7 @@ def monitor(agrs):
             )
         print_changes(new_cursor, cursor, colors=args.ansi)
         cursor = new_cursor
+        check_interrupt()
 
     # Follow
     while True:
