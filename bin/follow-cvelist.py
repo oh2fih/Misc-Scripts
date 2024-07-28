@@ -3,13 +3,14 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-h] [-i s] [-c N] [-o] [-a] [-u] [-v]
+# Usage: follow-cvelist.py [-h] [-i s] [-c N] [-o] [-a] [-4] [-u] [-v]
 #
 #  -h, --help          show this help message and exit
 #  -i s, --interval s  pull interval in seconds
 #  -c N, --commits N   amount of commits to include in the initial print
 #  -o, --once          only the current tail; no active follow (default: False)
 #  -a, --ansi          add ansi colors to the output (default: False)
+#  -4, --cvss4         show cvss 4.0 score instead of cvss 3.1 (default: False)
 #  -u, --url           prefix cve with url to nvd nist details (default: False)
 #  -v, --verbose       show verbose information on git pull (default: False)
 #
@@ -29,7 +30,7 @@ URL_PREFIX = "https://nvd.nist.gov/vuln/detail/"
 INTERRUPT = None
 
 
-def main(args):
+def main(args: argparse.Namespace):
     # Handle keyboard interruptions
     signal.signal(signal.SIGINT, interrupt_handler)
     # Handle termination signals
@@ -50,6 +51,10 @@ def main(args):
         exit(1)
 
     # Header
+    if args.cvss4:
+        cvss_title = "CVSS 4.0"
+    else:
+        cvss_title = "CVSS 3.1"
     if args.url:
         cve_title = "URL to CVE details"
         prefixlen = len(URL_PREFIX)
@@ -58,7 +63,7 @@ def main(args):
         prefixlen = 0
     print(
         f"{'TIME (UTC)'.ljust(20)} {cve_title.ljust(15+prefixlen)} "
-        f"{'CVSS 3.1'.ljust(10)} SUMMARY [vendor: product]",
+        f"{cvss_title.ljust(10)} SUMMARY [vendor: product]",
         file=sys.stderr,
     )
     try:
@@ -88,7 +93,7 @@ def check_interrupt():
         sys.exit(0)
 
 
-def history(args):
+def history(args: argparse.Namespace):
     """Prints CVE changes from the commit history, one commit at a time"""
     history = args.commits
     cursor = get_cursor(history)
@@ -105,7 +110,7 @@ def history(args):
         check_interrupt()
 
 
-def monitor(agrs):
+def monitor(args: argparse.Namespace):
     """Monitors new cvelistV5 commits and prints changed CVEs"""
     cursor = get_cursor()
 
@@ -145,10 +150,11 @@ def get_cursor(offset: int = 0) -> str:
     return result.stdout.decode("utf-8").strip()
 
 
-def print_changes(current_commit: str, past_commit: str, args):
+def print_changes(current_commit: str, past_commit: str, args: argparse.Namespace):
     """Print summary of changed CVE"""
     colors = args.ansi
     url = args.url
+    cvss4 = args.cvss4
 
     lines = []
     try:
@@ -199,7 +205,10 @@ def print_changes(current_commit: str, past_commit: str, args):
                     cve = f"{ansi('bright_blue')}{cve}{ansi('end')}"
                 try:
                     past = json_at_commit(path, past_commit)
-                    past_cvss = cvss31score(past)
+                    if cvss4:
+                        past_cvss = cvss40score(past)
+                    else:
+                        past_cvss = cvss31score(past)
                 except TypeError:
                     print(
                         f"Unexpected structure in {past_commit}:{path}", file=sys.stderr
@@ -210,7 +219,10 @@ def print_changes(current_commit: str, past_commit: str, args):
                     cve = f"{ansi('bright_cyan')}{cve}{ansi('end')}"
                 past_cvss = "   "
 
-            current_cvss = cvss31score(current)
+            if cvss4:
+                current_cvss = cvss40score(current)
+            else:
+                current_cvss = cvss31score(current)
 
             if colors:
                 END = ansi("end")
@@ -293,6 +305,24 @@ def cvss31score(cve: dict) -> float:
 
     cvss = max(cvss_adp, cvss_cna)
     return float("%0.1f" % cvss)
+
+
+def cvss40score(cve: dict) -> float:
+    """Gets CVSS 4.0 Score; only available in the cna container"""
+    cvss_cna = 0.0
+    try:
+        cna_metrics = cve["containers"]["cna"]["metrics"]
+        for metric in cna_metrics:
+            try:
+                if metric["cvssV4_0"]["version"] == "4.0":
+                    cvss_cna = metric["cvssV4_0"]["baseScore"]
+                    break
+            except:
+                pass
+    except:
+        pass
+
+    return float("%0.1f" % cvss_cna)
 
 
 def generate_summary(cve: dict) -> str:
@@ -477,6 +507,13 @@ if __name__ == "__main__":
         "--ansi",
         action="store_true",
         help="add ansi colors to the output",
+        default=False,
+    )
+    argParser.add_argument(
+        "-4",
+        "--cvss4",
+        action="store_true",
+        help="show cvss 4.0 score instead of cvss 3.1",
         default=False,
     )
     argParser.add_argument(
