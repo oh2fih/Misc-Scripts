@@ -76,12 +76,24 @@ def check_interrupt():
 
 def monitor(agrs):
     """Monitors cvelistV5 commits and prints changed CVEs"""
+    pull(args.verbose)
     cursor = get_cursor(args.commits)
 
-    while True:
-        pull(args.verbose)
-        new_cursor = get_cursor()
+    # Print previous changes one commit at a time
+    history = agrs.commits
+    while history > 0:
+        history -= 1
+        new_cursor = get_cursor(history)
+        if args.verbose:
+            print(
+                f"[{cursor} → {new_cursor}]",
+                file=sys.stderr,
+            )
+        print_changes(new_cursor, cursor, colors=args.ansi)
+        cursor = new_cursor
 
+    # Follow
+    while True:
         if new_cursor != cursor:
             if args.verbose:
                 print(
@@ -94,6 +106,9 @@ def monitor(agrs):
         for x in range(args.interval):
             check_interrupt()
             time.sleep(1)
+
+        pull(args.verbose)
+        new_cursor = get_cursor()
 
 
 def pull(verbose: bool = False):
