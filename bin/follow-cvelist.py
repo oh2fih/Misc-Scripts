@@ -55,6 +55,8 @@ def main(args):
     except:
         print(f"{''.ljust(80, '-')}", file=sys.stderr)
 
+    pull(args.verbose)
+    history(args)
     monitor(args)
 
 
@@ -74,13 +76,10 @@ def check_interrupt():
         sys.exit(0)
 
 
-def monitor(agrs):
-    """Monitors cvelistV5 commits and prints changed CVEs"""
-    pull(args.verbose)
-    cursor = get_cursor(args.commits)
-
-    # Print previous changes one commit at a time
-    history = agrs.commits
+def history(args):
+    """Prints CVE changes from the commit history, one commit at a time"""
+    history = args.commits
+    cursor = get_cursor(history)
     while history > 0:
         history -= 1
         new_cursor = get_cursor(history)
@@ -93,8 +92,19 @@ def monitor(agrs):
         cursor = new_cursor
         check_interrupt()
 
-    # Follow
+
+def monitor(agrs):
+    """Monitors new cvelistV5 commits and prints changed CVEs"""
+    cursor = get_cursor()
+
     while True:
+        for x in range(args.interval):
+            check_interrupt()
+            time.sleep(1)
+
+        pull(args.verbose)
+        new_cursor = get_cursor()
+
         if new_cursor != cursor:
             if args.verbose:
                 print(
@@ -103,13 +113,6 @@ def monitor(agrs):
                 )
             print_changes(new_cursor, cursor, colors=args.ansi)
             cursor = new_cursor
-
-        for x in range(args.interval):
-            check_interrupt()
-            time.sleep(1)
-
-        pull(args.verbose)
-        new_cursor = get_cursor()
 
 
 def pull(verbose: bool = False):
