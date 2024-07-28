@@ -24,7 +24,7 @@ import argparse, json, os, re, sys, signal, subprocess, time
 from pathlib import Path
 
 # URL prefix for --url mode
-URL_PREFIX = "https://nvd.nist.gov/vuln/detail/"
+URL_PREFIX = os.environ.get("CVE_URL_PREFIX", "https://nvd.nist.gov/vuln/detail/")
 
 # Variable used for interruption handling
 INTERRUPT = None
