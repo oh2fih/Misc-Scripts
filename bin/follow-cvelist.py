@@ -376,7 +376,16 @@ class CvelistFollower:
                     # This is not a very good title, but a last resort.
                     title = cve["containers"]["adp"][0]["title"]
                 except KeyError:
-                    pass
+                    try:
+                        # Mostly for rejected or withdrawn CVEs
+                        try:
+                            assignerShortName = cve["cveMetadata"]["assignerShortName"]
+                            assigner = f" – assigner: {assignerShortName}"
+                        except KeyError:
+                            assigner = ""
+                        title = f"{cve['cveMetadata']['state']}{assigner}"
+                    except KeyError:
+                        pass
 
         vendor = ""
         try:
