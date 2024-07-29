@@ -73,7 +73,7 @@ def getCacheTime(page):
     try:
         cached = re.search(b"<!-- Cache Enabler by KeyCDN (.*) -->", page).group(1)
         return cached.decode("utf-8")
-    except:
+    except AttributeError:
         return "Not cached."
 
 

@@ -11,7 +11,10 @@
 # Author : Esa Jokinen (oh2fih)
 # ------------------------------------------------------------------------------
 
-import sys, os, csv, re
+import sys
+import os
+import csv
+import re
 
 # Sort the list by MAC prefix: True = sort, False = preserve original order.
 SORT = False
@@ -19,7 +22,7 @@ SORT = False
 HEADER = """\
 # MAC prefix list generated with make-mac-prefixes.py by Esa Jokinen (oh2fih).
 # Original data comes from IEEE's https://standards-oui.ieee.org/oui/oui.csv
-# These values are known as Organizationally Unique Identifiers (OUIs) in 
+# These values are known as Organizationally Unique Identifiers (OUIs) in
 # MAC Address Block Large (MA-L) including large blocks of EUI-48 and EUI-64.
 # See https://standards.ieee.org/products-programs/regauth/\
 """
@@ -48,7 +51,7 @@ def main(csvdata):
             print(f"# Invalid prefix '{Row[1]}' in {Row}", file=sys.stderr)
 
     if not OUIs:
-        print(f"# Incorrect input format; oui.csv expected.", file=sys.stderr)
+        print("# Incorrect input format; oui.csv expected.", file=sys.stderr)
         exit(1)
     else:
         print(f"# Found {len(OUIs)} registed OUIs.", file=sys.stderr)
@@ -59,7 +62,7 @@ def main(csvdata):
 
     if SORT:
         OUIs.sort()
-        print(f"# Sorted by MAC prefix.", file=sys.stderr)
+        print("# Sorted by MAC prefix.", file=sys.stderr)
     return OUIs
 
 
@@ -106,7 +109,7 @@ def validatePrefix(prefix):
 if __name__ == "__main__":
     """Reads oui.csv from stdin & print nmap-mac-prefixes to stdout"""
     if os.isatty(sys.stdin.fileno()):
-        print(f"# Please provide oui.csv from a pipe.", file=sys.stderr)
+        print("# Please provide oui.csv from a pipe.", file=sys.stderr)
         exit(1)
     print(f"{HEADER}")
-    print(f"\n".join(main(sys.stdin)))
+    print("\n".join(main(sys.stdin)))

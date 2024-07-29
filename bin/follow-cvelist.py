@@ -69,7 +69,7 @@ class CvelistFollower:
 
         if not self.cvelist_repo():
             print(
-                f"Current directory is not the cvelistV5 repository root",
+                "Current directory is not the cvelistV5 repository root",
                 file=sys.stderr,
             )
             exit(1)
@@ -106,7 +106,7 @@ class CvelistFollower:
         )
         try:
             print(f"{''.ljust(os.get_terminal_size()[0], '-')}", file=sys.stderr)
-        except:
+        except OSError:
             print(f"{''.ljust(80, '-')}", file=sys.stderr)
 
     def history(self):
@@ -170,7 +170,7 @@ class CvelistFollower:
             else:
                 # substract one character to fit occasional wide characters like emojis
                 width = os.get_terminal_size()[0] - 1
-        except:
+        except OSError:
             width = False
 
         for change in self.get_changes(current_commit, past_commit):
@@ -316,9 +316,9 @@ class CvelistFollower:
                     if metric["cvssV3_1"]["version"] == "3.1":
                         cvss_adp = metric["cvssV3_1"]["baseScore"]
                         break
-                except:
+                except KeyError:
                     pass
-        except:
+        except KeyError:
             pass
 
         cvss_cna = 0.0
@@ -329,9 +329,9 @@ class CvelistFollower:
                     if metric["cvssV3_1"]["version"] == "3.1":
                         cvss_cna = metric["cvssV3_1"]["baseScore"]
                         break
-                except:
+                except KeyError:
                     pass
-        except:
+        except KeyError:
             pass
 
         cvss = max(cvss_adp, cvss_cna)
@@ -347,9 +347,9 @@ class CvelistFollower:
                     if metric["cvssV4_0"]["version"] == "4.0":
                         cvss_cna = metric["cvssV4_0"]["baseScore"]
                         break
-                except:
+                except KeyError:
                     pass
-        except:
+        except KeyError:
             pass
         return float("%0.1f" % cvss_cna)
 
@@ -359,38 +359,38 @@ class CvelistFollower:
         description = ""
         try:
             title = cve["containers"]["cna"]["title"]
-        except:
+        except KeyError:
             try:
                 for description in cve["containers"]["cna"]["descriptions"]:
                     if description["lang"] in ("en", "en-US", "en_US"):
                         description = description["value"]
                         title = ""
                         break
-            except:
+            except KeyError:
                 try:
                     # This is not a very good title, but a last resort.
                     title = cve["containers"]["adp"][0]["title"]
-                except:
+                except KeyError:
                     pass
 
         vendor = ""
         try:
             vendor = cve["containers"]["adp"][0]["affected"][0]["vendor"]
-        except:
+        except KeyError:
             try:
                 if cve["containers"]["cna"]["affected"][0]["vendor"] != "n/a":
                     vendor = cve["containers"]["cna"]["affected"][0]["vendor"]
-            except:
+            except KeyError:
                 pass
 
         product = ""
         try:
             product = cve["containers"]["adp"][0]["affected"][0]["product"]
-        except:
+        except KeyError:
             try:
                 if cve["containers"]["cna"]["affected"][0]["product"] != "n/a":
                     product = cve["containers"]["cna"]["affected"][0]["product"]
-            except:
+            except KeyError:
                 pass
 
         # Title is typically short and likely contains the vendor and product, whereas
@@ -452,7 +452,7 @@ class CvelistFollower:
                     if "# CVE List V5" in line:
                         return True
             return False
-        except:
+        except (FileNotFoundError, PermissionError):
             return False
 
 
