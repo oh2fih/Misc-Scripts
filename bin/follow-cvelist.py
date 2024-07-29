@@ -367,7 +367,7 @@ class CvelistFollower:
         except KeyError:
             try:
                 for description in cve["containers"]["cna"]["descriptions"]:
-                    if description["lang"] in ("en", "en-US", "en_US"):
+                    if description["lang"] in ["en", "en-US", "en_US"]:
                         description = description["value"]
                         title = ""
                         break
@@ -425,7 +425,10 @@ class CvelistFollower:
             ],
             stdout=subprocess.PIPE,
         )
-        return result.stdout.readlines()
+        if result.stdout:
+            return result.stdout.readlines()
+        else:
+            return []
 
     def json_at_commit(self, path: Path, commit: str) -> dict:
         """Dictionary of JSON file contents at given commit"""
@@ -497,7 +500,7 @@ class ANSI:
             return ansi["end"]
 
 
-def check_positive(value: int):
+def check_positive(value: str) -> int:
     ivalue = int(value)
     if ivalue <= 0:
         raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
