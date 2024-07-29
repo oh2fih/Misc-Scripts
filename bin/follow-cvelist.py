@@ -22,12 +22,19 @@
 # Home   : https://github.com/oh2fih/Misc-Scripts
 # ------------------------------------------------------------------------------
 
-import argparse, json, os, re, sys, signal, subprocess, time
+import argparse
+import json
+import os
+import re
+import sys
+import signal
+import subprocess
+import time
 from pathlib import Path
 
 
 def main(args: argparse.Namespace):
-    cvelist = FollowCvelist(args)
+    cvelist = CvelistFollower(args)
     cvelist.header()
     cvelist.pull()
     cvelist.history()
@@ -35,8 +42,8 @@ def main(args: argparse.Namespace):
         cvelist.monitor()
 
 
-class FollowCvelist:
-    """Follow changes (commits) in CVEProject / cvelistV5"""
+class CvelistFollower:
+    """Follows changes (commits) in CVEProject / cvelistV5"""
 
     def __init__(self, args: argparse.Namespace):
         self.args = args
@@ -126,10 +133,8 @@ class FollowCvelist:
             for x in range(self.args.interval):
                 self.check_interrupt()
                 time.sleep(1)
-
             self.pull()
             new_cursor = self.get_cursor()
-
             if new_cursor != cursor:
                 if self.args.verbose:
                     print(
@@ -168,11 +173,20 @@ class FollowCvelist:
         except:
             width = False
 
-        if self.args.url:
-            prefixlen = len(self.URL_PREFIX)
-        else:
-            prefixlen = 0
+        for change in self.get_changes(current_commit, past_commit):
+            lines.append(self.format_line(change))
+        lines.sort()
+        for line in lines:
+            if width:
+                print(line[:width])
+            else:
+                print(line)
 
+    def get_changes(
+        self, current_commit: str, past_commit: str
+    ) -> list[dict[str, str]]:
+        """Return changes in CVEs between two commits"""
+        changes = []
         for file in self.changed_files(current_commit, past_commit):
             type = re.split(r"\t+", file.decode("utf-8").strip())[0]
             path = re.split(r"\t+", file.decode("utf-8").strip())[1]
@@ -186,97 +200,111 @@ class FollowCvelist:
                     )
                 else:
                     print(f"Deleted: {Path(path).stem}", file=sys.stderr)
-            else:
+                continue
+
+            try:
+                current = self.json_at_commit(path, current_commit)
+                modified = current["cveMetadata"]["dateUpdated"]
+                modified = re.sub(r"\..*", "", modified)
+                modified = re.sub(r"T", " ", modified)
+                cve = current["cveMetadata"]["cveId"]
+            except (KeyError, TypeError):
+                print(
+                    f"Unexpected structure in {current_commit}:{path}",
+                    file=sys.stderr,
+                )
+                continue
+
+            if type == "M":
                 try:
-                    current = self.json_at_commit(path, current_commit)
-                    modified = current["cveMetadata"]["dateUpdated"]
-                    modified = re.sub(r"\..*", "", modified)
-                    modified = re.sub(r"T", " ", modified)
-                    cve = current["cveMetadata"]["cveId"]
-                except (KeyError, TypeError):
+                    past = self.json_at_commit(path, past_commit)
+                    if self.args.cvss4:
+                        past_cvss = self.cvss40score(past)
+                    else:
+                        past_cvss = self.cvss31score(past)
+                except TypeError:
                     print(
-                        f"Unexpected structure in {current_commit}:{path}",
+                        f"Unexpected structure in {past_commit}:{path}",
                         file=sys.stderr,
                     )
-                    continue
-
-                if self.args.url:
-                    cve = f"{self.URL_PREFIX}{cve}"
-
-                if type == "M":
-                    if self.args.ansi:
-                        cve = f"{ANSI.code('bright_blue')}{cve}{ANSI.code('end')}"
-                    try:
-                        past = self.json_at_commit(path, past_commit)
-                        if self.args.cvss4:
-                            past_cvss = self.cvss40score(past)
-                        else:
-                            past_cvss = self.cvss31score(past)
-                    except TypeError:
-                        print(
-                            f"Unexpected structure in {past_commit}:{path}",
-                            file=sys.stderr,
-                        )
-                        past_cvss = "   "
-                else:
-                    if self.args.ansi:
-                        cve = f"{ANSI.code('bright_cyan')}{cve}{ANSI.code('end')}"
-                    past_cvss = "   "
-
-                if self.args.cvss4:
-                    current_cvss = self.cvss40score(current)
-                else:
-                    current_cvss = self.cvss31score(current)
-
-                if self.args.ansi:
-                    END = ANSI.code("end")
-                    if current_cvss >= 9.0:
-                        COLOR = ANSI.code("bright_red", "bold")
-                    elif current_cvss >= 7.0:
-                        COLOR = ANSI.code("red")
-                    elif current_cvss >= 4.0:
-                        COLOR = ANSI.code("yellow")
-                    elif current_cvss >= 0.1:
-                        COLOR = ANSI.code("green")
-                    else:
-                        COLOR = f"{END}\000\000\000"
-
-                if current_cvss == 0.0:
-                    current_cvss = "   "
-                if past_cvss == 0.0:
-                    past_cvss = "   "
-
-                if current_cvss != past_cvss:
-                    if self.args.ansi:
-                        cvss = f"{past_cvss} {COLOR}→ {current_cvss}{END}"
-                    else:
-                        cvss = f"{past_cvss} → {current_cvss}"
-                else:
-                    if self.args.ansi:
-                        cvss = f"{COLOR}{current_cvss}{END}"
-                    else:
-                        cvss = f"{current_cvss}"
-
-                summary = re.sub(r"\n", " ", self.generate_summary(current))
-
-                if self.args.ansi:
-                    lines.append(
-                        f"{modified.ljust(20)} {cve.ljust(26+prefixlen)} "
-                        f"{cvss.ljust(21)} {summary}"
-                    )
-                else:
-                    lines.append(
-                        f"{modified.ljust(20)} {cve.ljust(15+prefixlen)} "
-                        f"{cvss.ljust(10)} {summary}"
-                    )
-
-        lines.sort()
-
-        for line in lines:
-            if width:
-                print(line[:width])
+                    past_cvss = 0.0
             else:
-                print(line)
+                past_cvss = 0.0
+
+            if self.args.cvss4:
+                current_cvss = self.cvss40score(current)
+            else:
+                current_cvss = self.cvss31score(current)
+
+            changes.append(
+                {
+                    "type": type,
+                    "modified": modified,
+                    "cve": cve,
+                    "past_cvss": past_cvss,
+                    "current_cvss": current_cvss,
+                    "summary": re.sub(r"\n", " ", self.generate_summary(current)),
+                }
+            )
+        return changes
+
+    def format_line(self, line) -> str:
+        """Format a line based on the selected modes"""
+        modified = line["modified"]
+
+        if self.args.url:
+            cve = f"{self.URL_PREFIX}{line['cve']}"
+            prefixlen = len(self.URL_PREFIX)
+        else:
+            cve = line["cve"]
+            prefixlen = 0
+        if self.args.ansi:
+            if line["type"] == "M":
+                cve = f"{ANSI.code('bright_blue')}{cve}{ANSI.code('end')}"
+            else:
+                cve = f"{ANSI.code('bright_cyan')}{cve}{ANSI.code('end')}"
+
+        if line["current_cvss"] == 0.0:
+            current_cvss = "   "
+        else:
+            current_cvss = line["current_cvss"]
+        if line["past_cvss"] == 0.0:
+            past_cvss = "   "
+        else:
+            past_cvss = line["past_cvss"]
+        if self.args.ansi:
+            END = ANSI.code("end")
+            if line["current_cvss"] >= 9.0:
+                cvss_color = ANSI.code("bright_red", "bold")
+            elif line["current_cvss"] >= 7.0:
+                cvss_color = ANSI.code("red")
+            elif line["current_cvss"] >= 4.0:
+                cvss_color = ANSI.code("yellow")
+            elif line["current_cvss"] >= 0.1:
+                cvss_color = ANSI.code("green")
+            else:
+                cvss_color = f"{END}\000\000\000"
+        if current_cvss != past_cvss:
+            if self.args.ansi:
+                cvss = f"{past_cvss} {cvss_color}→ {current_cvss}{END}"
+            else:
+                cvss = f"{past_cvss} → {current_cvss}"
+        else:
+            if self.args.ansi:
+                cvss = f"{cvss_color}{current_cvss}{END}"
+            else:
+                cvss = f"{current_cvss}"
+
+        if self.args.ansi:
+            return (
+                f"{modified.ljust(20)} {cve.ljust(26+prefixlen)} "
+                f"{cvss.ljust(21)} {line['summary']}"
+            )
+        else:
+            return (
+                f"{modified.ljust(20)} {cve.ljust(15+prefixlen)} "
+                f"{cvss.ljust(10)} {line['summary']}"
+            )
 
     def cvss31score(self, cve: dict) -> float:
         """Gets CVSS 3.1 Score. If present in both containers, take higher"""
@@ -323,7 +351,6 @@ class FollowCvelist:
                     pass
         except:
             pass
-
         return float("%0.1f" % cvss_cna)
 
     def generate_summary(self, cve: dict) -> str:
@@ -424,7 +451,6 @@ class FollowCvelist:
                 for line in readme:
                     if "# CVE List V5" in line:
                         return True
-
             return False
         except:
             return False
