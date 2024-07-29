@@ -3,16 +3,16 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-h] [-i s] [-c N] [-o] [-a] [-4] [-u] [-v]
+# Usage: follow-cvelist.py [-haouv4] [-i s] [-c N]
 #
 #  -h, --help          show this help message and exit
-#  -i s, --interval s  pull interval in seconds
-#  -c N, --commits N   amount of commits to include in the initial print
-#  -o, --once          only the current tail; no active follow (default: False)
 #  -a, --ansi          add ansi colors to the output (default: False)
-#  -4, --cvss4         show cvss 4.0 score instead of cvss 3.1 (default: False)
+#  -o, --once          only the current tail; no active follow (default: False)
 #  -u, --url           prefix cve with url to nvd nist details (default: False)
 #  -v, --verbose       show verbose information on git pull (default: False)
+#  -4, --cvss4         show cvss 4.0 score instead of cvss 3.1 (default: False)
+#  -i s, --interval s  pull interval in seconds (default: 150)
+#  -c N, --commits N   number of commits to print initially (default: 30)
 #
 # Requires git. Working directory must be the root of the cvelistV5 repository.
 #
@@ -62,7 +62,7 @@ def main(args: argparse.Namespace):
         cve_title = "CVE ID"
         prefixlen = 0
     print(
-        f"{'TIME (UTC)'.ljust(20)} {cve_title.ljust(15+prefixlen)} "
+        f"{'TIME UPDATED (UTC)'.ljust(20)} {cve_title.ljust(15+prefixlen)} "
         f"{cvss_title.ljust(10)} SUMMARY [vendor: product]",
         file=sys.stderr,
     )
@@ -475,32 +475,10 @@ def check_positive(value: int):
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser(
         description="Follow changes (commits) in CVEProject / cvelistV5",
+        usage="%(prog)s [-haouv4] [-i s] [-c N]",
         epilog="Requires git. "
         "Working directory must be the root of cvelistV5 repository.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    argParser.add_argument(
-        "-i",
-        "--interval",
-        type=check_positive,
-        metavar="s",
-        help="pull interval in seconds",
-        default=150,
-    )
-    argParser.add_argument(
-        "-c",
-        "--commits",
-        type=check_positive,
-        metavar="N",
-        help="amount of commits to include in the initial print",
-        default=30,
-    )
-    argParser.add_argument(
-        "-o",
-        "--once",
-        action="store_true",
-        help="only the current tail; no active follow",
-        default=False,
     )
     argParser.add_argument(
         "-a",
@@ -510,10 +488,10 @@ if __name__ == "__main__":
         default=False,
     )
     argParser.add_argument(
-        "-4",
-        "--cvss4",
+        "-o",
+        "--once",
         action="store_true",
-        help="show cvss 4.0 score instead of cvss 3.1",
+        help="only the current tail; no active follow",
         default=False,
     )
     argParser.add_argument(
@@ -529,6 +507,29 @@ if __name__ == "__main__":
         action="store_true",
         help="show verbose information on git pull",
         default=False,
+    )
+    argParser.add_argument(
+        "-4",
+        "--cvss4",
+        action="store_true",
+        help="show cvss 4.0 score instead of cvss 3.1",
+        default=False,
+    )
+    argParser.add_argument(
+        "-i",
+        "--interval",
+        type=check_positive,
+        metavar="s",
+        help="pull interval in seconds",
+        default=150,
+    )
+    argParser.add_argument(
+        "-c",
+        "--commits",
+        type=check_positive,
+        metavar="N",
+        help="number of commits to print initially",
+        default=30,
     )
     args = argParser.parse_args()
     main(args)
