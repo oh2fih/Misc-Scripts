@@ -9,7 +9,9 @@
 # Tip: curl https://standards-oui.ieee.org/oui/oui.csv | ./make-mac-prefixes.py
 #
 # Author : Esa Jokinen (oh2fih)
+# Home   : https://github.com/oh2fih/Misc-Scripts
 # ------------------------------------------------------------------------------
+# flake8: noqa: E501
 
 import sys
 import os

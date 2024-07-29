@@ -21,6 +21,7 @@
 # Author : Esa Jokinen (oh2fih)
 # Home   : https://github.com/oh2fih/Misc-Scripts
 # ------------------------------------------------------------------------------
+# flake8: noqa: E501
 
 import argparse
 import json
@@ -367,8 +368,8 @@ class CvelistFollower:
         except KeyError:
             try:
                 for description in cve["containers"]["cna"]["descriptions"]:
-                    if description["lang"] in ["en", "en-US", "en_US"]:
-                        description = description["value"]
+                    if description["lang"] in ["en", "en-US", "en_US"]:  # type: ignore
+                        description = description["value"]  # type: ignore
                         title = ""
                         break
             except KeyError:

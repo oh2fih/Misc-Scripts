@@ -9,6 +9,7 @@
 # Author : Esa Jokinen (oh2fih)
 # Home   : https://github.com/oh2fih/Misc-Scripts
 # ------------------------------------------------------------------------------
+# flake8: noqa: E501
 
 import sys
 import re
@@ -16,10 +17,10 @@ import os
 import urllib.request
 
 try:
-    import validators
+    import validators  # type: ignore
 except ImportError:
 
-    class validators:
+    class validators:  # type: ignore
         def url(url):
             return True
 
