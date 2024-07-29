@@ -75,7 +75,7 @@ class CvelistFollower:
             exit(1)
 
     def interrupt_handler(self, signum, frame):
-        """Tells that an interrupt signal is received through global variable INTERRUPT"""
+        """Tells that an interrupt signal is received through variable INTERRUPT"""
         self.INTERRUPT = signum
 
     def check_interrupt(self):
@@ -112,15 +112,19 @@ class CvelistFollower:
     def history(self):
         """Prints CVE changes from the commit history, one commit at a time"""
         history = self.args.commits
-        cursor = self.get_cursor(history)
+        try:
+            cursor = self.get_cursor(history)
+        except IndexError as e:
+            print(
+                f"{e}; try lower --commit",
+                file=sys.stderr,
+            )
+            exit(1)
         while history > 0:
             history -= 1
             new_cursor = self.get_cursor(history)
             if self.args.verbose:
-                print(
-                    f"[{cursor} → {new_cursor}]",
-                    file=sys.stderr,
-                )
+                print(f"[{cursor} → {new_cursor}]", file=sys.stderr)
             self.print_changes(new_cursor, cursor)
             cursor = new_cursor
             self.check_interrupt()
@@ -137,10 +141,7 @@ class CvelistFollower:
             new_cursor = self.get_cursor()
             if new_cursor != cursor:
                 if self.args.verbose:
-                    print(
-                        f"[{cursor} → {new_cursor}]",
-                        file=sys.stderr,
-                    )
+                    print(f"[{cursor} → {new_cursor}]", file=sys.stderr)
                 self.print_changes(new_cursor, cursor)
                 cursor = new_cursor
 
@@ -156,8 +157,12 @@ class CvelistFollower:
     def get_cursor(self, offset: int = 0) -> str:
         """Gets commit id at the offset from the current head"""
         result = subprocess.run(
-            ["git", "rev-parse", "--verify", f"HEAD~{offset}"], stdout=subprocess.PIPE
+            ["git", "rev-parse", "--verify", f"HEAD~{offset}"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
+        if result.stderr:
+            raise IndexError(f"Commit at HEAD~{offset} not found")
         return result.stdout.decode("utf-8").strip()
 
     def print_changes(self, current_commit: str, past_commit: str):
@@ -434,6 +439,7 @@ class CvelistFollower:
             print(f"Could not open {commit}:{path}", file=sys.stderr)
         except json.decoder.JSONDecodeError:
             print(f"Could not parse {commit}:{path}", file=sys.stderr)
+        return {}
 
     def cvelist_repo(self):
         """Detects whether the working directory is the root of CVEProject/cvelistV5"""
