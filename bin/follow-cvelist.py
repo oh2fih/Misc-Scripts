@@ -117,10 +117,11 @@ class CvelistFollower:
             cursor = self.get_cursor(history)
         except IndexError as e:
             print(
-                f"{e}; try lower --commit",
+                f"{e}; showing only the latest update (try lower --commit)",
                 file=sys.stderr,
             )
-            exit(1)
+            history = 1
+            cursor = self.get_cursor(history)
         while history > 0:
             history -= 1
             new_cursor = self.get_cursor(history)
