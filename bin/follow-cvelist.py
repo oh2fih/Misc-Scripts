@@ -150,7 +150,10 @@ class CvelistFollower:
     def pull(self):
         """Runs git pull"""
         if self.args.verbose > 1:
-            subprocess.call(["git", "pull"])
+            result = subprocess.run(
+                ["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
+            print(result.stdout.decode("utf-8").strip(), file=sys.stderr)
         else:
             subprocess.call(
                 ["git", "pull"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
