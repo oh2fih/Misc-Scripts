@@ -32,6 +32,7 @@ import signal
 import subprocess
 import time
 from pathlib import Path
+from typing import List, Dict
 
 
 def main(args: argparse.Namespace):
@@ -194,7 +195,7 @@ class CvelistFollower:
 
     def get_changes(
         self, current_commit: str, past_commit: str
-    ) -> list[dict[str, str]]:
+    ) -> List[Dict[str, str]]:
         """Return changes in CVEs between two commits"""
         changes = []
         for file in self.changed_files(current_commit, past_commit):
