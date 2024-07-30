@@ -9,8 +9,8 @@
 #  -a, --ansi          add ansi colors to the output (default: False)
 #  -o, --once          only the current tail; no active follow (default: False)
 #  -u, --url           prefix cve with url to nvd nist details (default: False)
-#  -v, --verbose       each -v increases verbosity (commits, git pull, raw data)
 #  -4, --cvss4         show cvss 4.0 score instead of cvss 3.1 (default: False)
+#  -v, --verbose       each -v increases verbosity (commits, git pull, raw data)
 #  -i s, --interval s  pull interval in seconds (default: 150)
 #  -c N, --commits N   number of commits to print initially (default: 30)
 #
