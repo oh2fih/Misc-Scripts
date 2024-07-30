@@ -3,13 +3,13 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-haouv4] [-i s] [-c N]
+# Usage: follow-cvelist.py [-haou4] [-vvvv] [-i s] [-c N]
 #
 #  -h, --help          show this help message and exit
 #  -a, --ansi          add ansi colors to the output (default: False)
 #  -o, --once          only the current tail; no active follow (default: False)
 #  -u, --url           prefix cve with url to nvd nist details (default: False)
-#  -v, --verbose       show verbose information on git pull (default: False)
+#  -v, --verbose       each -v increases verbosity (commits, git pull, raw data)
 #  -4, --cvss4         show cvss 4.0 score instead of cvss 3.1 (default: False)
 #  -i s, --interval s  pull interval in seconds (default: 150)
 #  -c N, --commits N   number of commits to print initially (default: 30)
@@ -125,7 +125,7 @@ class CvelistFollower:
         while history > 0:
             history -= 1
             new_cursor = self.get_cursor(history)
-            if self.args.verbose:
+            if self.args.verbose > 0:
                 print(f"[{cursor} → {new_cursor}]", file=sys.stderr)
             self.print_changes(new_cursor, cursor)
             cursor = new_cursor
@@ -142,14 +142,14 @@ class CvelistFollower:
             self.pull()
             new_cursor = self.get_cursor()
             if new_cursor != cursor:
-                if self.args.verbose:
+                if self.args.verbose > 0:
                     print(f"[{cursor} → {new_cursor}]", file=sys.stderr)
                 self.print_changes(new_cursor, cursor)
                 cursor = new_cursor
 
     def pull(self):
         """Runs git pull"""
-        if self.args.verbose:
+        if self.args.verbose > 1:
             subprocess.call(["git", "pull"])
         else:
             subprocess.call(
@@ -243,16 +243,17 @@ class CvelistFollower:
             else:
                 current_cvss = self.cvss31score(current)
 
-            changes.append(
-                {
-                    "type": type,
-                    "modified": modified,
-                    "cve": cve,
-                    "past_cvss": past_cvss,
-                    "current_cvss": current_cvss,
-                    "summary": re.sub(r"\n", " ", self.generate_summary(current)),
-                }
-            )
+            change = {
+                "type": type,
+                "modified": modified,
+                "cve": cve,
+                "past_cvss": past_cvss,
+                "current_cvss": current_cvss,
+                "summary": re.sub(r"\n", " ", self.generate_summary(current)),
+            }
+            if self.args.verbose > 2:
+                print(f"[change] {change}", file=sys.stderr)
+            changes.append(change)
         return changes
 
     def format_line(self, line) -> str:
@@ -448,6 +449,8 @@ class CvelistFollower:
                 ["git", "show", f"{commit}:{path}"], stdout=subprocess.PIPE
             )
             data = json.loads(result.stdout.decode("utf-8"))
+            if self.args.verbose > 3:
+                print(f"[{commit}:{path}] {data}", file=sys.stderr)
             return data
         except IOError:
             print(f"Could not open {commit}:{path}", file=sys.stderr)
@@ -521,7 +524,7 @@ def check_positive(value: str) -> int:
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser(
         description="Follow changes (commits) in CVEProject / cvelistV5",
-        usage="%(prog)s [-haouv4] [-i s] [-c N]",
+        usage="%(prog)s [-haou4] [-vvvv] [-i s] [-c N]",
         epilog="Requires git. "
         "Working directory must be the root of cvelistV5 repository.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -548,18 +551,18 @@ if __name__ == "__main__":
         default=False,
     )
     argParser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="show verbose information on git pull",
-        default=False,
-    )
-    argParser.add_argument(
         "-4",
         "--cvss4",
         action="store_true",
         help="show cvss 4.0 score instead of cvss 3.1",
         default=False,
+    )
+    argParser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        help="each -v increases verbosity (commits, git pull, raw data)",
+        default=0,
     )
     argParser.add_argument(
         "-i",
@@ -578,4 +581,18 @@ if __name__ == "__main__":
         default=30,
     )
     args = argParser.parse_args()
+
+    match args.verbose:
+        case 4:
+            print(
+                "VERBOSITY: raw json, raw changes, git pulls, commit IDs",
+                file=sys.stderr,
+            )
+        case 3:
+            print("VERBOSITY: raw changes, git pulls, commit IDs", file=sys.stderr)
+        case 2:
+            print("VERBOSITY: git pulls, commit IDs", file=sys.stderr)
+        case 1:
+            print("VERBOSITY: commit IDs", file=sys.stderr)
+
     main(args)
