@@ -27,15 +27,15 @@ import argparse
 import json
 import os
 import re
-import sys
 import signal
 import subprocess
+import sys
 import time
 from pathlib import Path
-from typing import List, Dict
+from typing import Any, Dict, List
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> None:
     cvelist = CvelistFollower(args)
     cvelist.header()
     cvelist.pull()
@@ -76,11 +76,11 @@ class CvelistFollower:
             )
             exit(1)
 
-    def interrupt_handler(self, signum, frame):
+    def interrupt_handler(self, signum: Any, frame: Any) -> None:
         """Tells that an interrupt signal is received through variable INTERRUPT"""
         self.INTERRUPT = signum
 
-    def check_interrupt(self):
+    def check_interrupt(self) -> None:
         """Exits if interrupt is received"""
         if self.INTERRUPT:
             print(
@@ -89,7 +89,7 @@ class CvelistFollower:
             )
             sys.exit(0)
 
-    def header(self):
+    def header(self) -> None:
         """Print header"""
         if self.args.cvss4:
             cvss_title = "CVSS 4.0"
@@ -111,7 +111,7 @@ class CvelistFollower:
         except OSError:
             print(f"{''.ljust(80, '-')}", file=sys.stderr)
 
-    def history(self):
+    def history(self) -> None:
         """Prints CVE changes from the commit history, one commit at a time"""
         history = self.args.commits
         try:
@@ -132,7 +132,7 @@ class CvelistFollower:
             cursor = new_cursor
             self.check_interrupt()
 
-    def monitor(self):
+    def monitor(self) -> None:
         """Monitors new cvelistV5 commits and prints changed CVEs"""
         cursor = self.get_cursor()
 
@@ -148,7 +148,7 @@ class CvelistFollower:
                 self.print_changes(new_cursor, cursor)
                 cursor = new_cursor
 
-    def pull(self):
+    def pull(self) -> None:
         """Runs git pull"""
         if self.args.verbose > 1:
             result = subprocess.run(
@@ -171,7 +171,7 @@ class CvelistFollower:
             raise IndexError(f"Commit at HEAD~{offset} not found")
         return result.stdout.decode("utf-8").strip()
 
-    def print_changes(self, current_commit: str, past_commit: str):
+    def print_changes(self, current_commit: str, past_commit: str) -> None:
         """Print summary of changed CVE"""
         lines = []
         try:
@@ -200,17 +200,16 @@ class CvelistFollower:
         changes = []
         for file in self.changed_files(current_commit, past_commit):
             type = re.split(r"\t+", file.decode("utf-8").strip())[0]
-            path = re.split(r"\t+", file.decode("utf-8").strip())[1]
+            path = Path(re.split(r"\t+", file.decode("utf-8").strip())[1])
 
             if type == "D":
                 if self.args.ansi:
                     print(
-                        f"{ANSI.code('red')}Deleted: "
-                        f"{Path(path).stem}{ANSI.code('end')}",
+                        f"{ANSI.code('red')}Deleted: " f"{path.stem}{ANSI.code('end')}",
                         file=sys.stderr,
                     )
                 else:
-                    print(f"Deleted: {Path(path).stem}", file=sys.stderr)
+                    print(f"Deleted: {path.stem}", file=sys.stderr)
                 continue
 
             try:
@@ -260,7 +259,7 @@ class CvelistFollower:
             changes.append(change)
         return changes
 
-    def format_line(self, line) -> str:
+    def format_line(self, line: Dict[str, Any]) -> str:
         """Format a line based on the selected modes"""
         modified = line["modified"]
 
@@ -318,7 +317,7 @@ class CvelistFollower:
                 f"{cvss.ljust(10)} {line['summary']}"
             )
 
-    def cvss31score(self, cve: dict) -> float:
+    def cvss31score(self, cve: Dict[str, Any]) -> float:
         """Gets CVSS 3.1 Score. If present in both containers, take higher"""
         cvss_adp = 0.0
         try:
@@ -349,7 +348,7 @@ class CvelistFollower:
         cvss = max(cvss_adp, cvss_cna)
         return float("%0.1f" % cvss)
 
-    def cvss40score(self, cve: dict) -> float:
+    def cvss40score(self, cve: Dict[str, Any]) -> float:
         """Gets CVSS 4.0 Score; only available in the cna container"""
         cvss_cna = 0.0
         try:
@@ -365,7 +364,7 @@ class CvelistFollower:
             pass
         return float("%0.1f" % cvss_cna)
 
-    def generate_summary(self, cve: dict) -> str:
+    def generate_summary(self, cve: Dict[str, Any]) -> str:
         """Generates summary from title or description & affected vendor/product"""
         title = ""
         description = ""
@@ -427,7 +426,7 @@ class CvelistFollower:
         else:
             return title
 
-    def changed_files(self, current_commit: str, past_commit: str) -> list:
+    def changed_files(self, current_commit: str, past_commit: str) -> List[bytes]:
         """List cve files changed between two commits; ignore delta files"""
         result = subprocess.Popen(
             [
@@ -446,7 +445,7 @@ class CvelistFollower:
         else:
             return []
 
-    def json_at_commit(self, path: Path, commit: str) -> dict:
+    def json_at_commit(self, path: Path, commit: str) -> Any:
         """Dictionary of JSON file contents at given commit"""
         try:
             result = subprocess.run(
@@ -462,7 +461,7 @@ class CvelistFollower:
             print(f"Could not parse {commit}:{path}", file=sys.stderr)
         return {}
 
-    def cvelist_repo(self):
+    def cvelist_repo(self) -> bool:
         """Detects whether the working directory is the root of CVEProject/cvelistV5"""
         try:
             result = subprocess.run(

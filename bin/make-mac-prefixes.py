@@ -13,10 +13,11 @@
 # ------------------------------------------------------------------------------
 # flake8: noqa: E501
 
-import sys
-import os
 import csv
+import os
 import re
+import sys
+from typing import List, TextIO
 
 # Sort the list by MAC prefix: True = sort, False = preserve original order.
 SORT = False
@@ -38,7 +39,7 @@ ADDITIONS = [
 ]
 
 
-def main(csvdata):
+def main(csvdata: TextIO) -> List[str]:
     """Return processed (and optionally sorted) OUIs with ADDITIONS"""
     OUIs = []
 
@@ -68,7 +69,7 @@ def main(csvdata):
     return OUIs
 
 
-def decapitalize(string):
+def decapitalize(string: str) -> str:
     """Un-capitalize an all-caps company name"""
     decapitalized = ""
     words = string.split()
@@ -87,7 +88,7 @@ def decapitalize(string):
     return decapitalized
 
 
-def shorten(string):
+def shorten(string: str) -> str:
     """Rules to shorten the names a bit, such as eliminating Inc."""
     string = re.sub(r",.{1,6}$", "", string)
     string = re.sub(
@@ -100,7 +101,7 @@ def shorten(string):
     return string
 
 
-def validatePrefix(prefix):
+def validatePrefix(prefix: str) -> bool:
     """Validates a MAC prefix: must consist of six hexadecimal characters"""
     if re.match(r"^([0-9a-fA-F]{6})$", prefix):
         return True

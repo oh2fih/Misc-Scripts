@@ -11,21 +11,23 @@
 # ------------------------------------------------------------------------------
 # flake8: noqa: E501
 
-import sys
-import re
 import os
+import re
+import sys
 import urllib.request
+from typing import List
 
 try:
     import validators  # type: ignore
 except ImportError:
 
     class validators:  # type: ignore
-        def url(url):
+        @staticmethod
+        def url(url: str) -> bool:
             return True
 
 
-def main(urllist):
+def main(urllist: List[str]) -> None:
     """Causes the pages to be cached, gets them and prints the results as a table."""
 
     # Enable ANSI colors on Windows.
@@ -69,29 +71,30 @@ def main(urllist):
     print()
 
 
-def getCacheTime(page):
+def getCacheTime(page: bytes) -> str:
     """Parses the cache time from the Cache Enabler comment on a HTML page."""
-    try:
-        cached = re.search(b"<!-- Cache Enabler by KeyCDN (.*) -->", page).group(1)
+    result = re.search(b"<!-- Cache Enabler by KeyCDN (.*) -->", page)
+    if result:
+        cached = result.group(1)
         return cached.decode("utf-8")
-    except AttributeError:
+    else:
         return "Not cached."
 
 
-def printResultLine(url, result, urlmaxlenght, SGR):
+def printResultLine(url: str, result: str, urlmaxlenght: int, SGR: int) -> None:
     """Prints table formatted result line & ANSI colors."""
     width = urlmaxlenght + 2
     print(f"{url:{width}}{ansi(SGR)}{result:<10}{ansi(0)}")
 
 
-def ansi(SGR=0):
+def ansi(SGR: int = 0) -> str:
     """Returns ANSI codes used in this script. SGR = Select Graphic Rendition"""
     if not isinstance(SGR, int):
         SGR = 0
     return f"\033[{SGR}m"
 
 
-def usage():
+def usage() -> None:
     print(f"{os.linesep}Usage: {sys.argv[0]} https://example.com [...]")
     print(f"{os.linesep}Also takes line break separated URLs from a pipe.{os.linesep}")
     exit(1)
