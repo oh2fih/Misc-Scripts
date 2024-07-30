@@ -584,7 +584,6 @@ if __name__ == "__main__":
         default=30,
     )
     args = argParser.parse_args()
-
     match args.verbose:
         case 4:
             print(
@@ -597,5 +596,4 @@ if __name__ == "__main__":
             print("VERBOSITY: git pulls, commit IDs", file=sys.stderr)
         case 1:
             print("VERBOSITY: commit IDs", file=sys.stderr)
-
     main(args)
