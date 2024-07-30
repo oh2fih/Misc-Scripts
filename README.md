@@ -3,7 +3,7 @@
 Miscellaneous scripts for different purposes. Mostly unrelated to each other.
 
 ![ShellCheck](https://github.com/oh2fih/Misc-Scripts/workflows/ShellCheck/badge.svg)
-![Black (Python)](https://github.com/oh2fih/Misc-Scripts/workflows/Black%20(Python)/badge.svg)
+![Python Code Quality)](https://github.com/oh2fih/Misc-Scripts/workflows/Python%20Code%20Quality/badge.svg)
 
 | Category | Script & Language | Purpose & Usage |
 |:---|:---|:---|

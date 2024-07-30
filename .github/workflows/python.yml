@@ -1,4 +1,4 @@
-name: Black (Python)
+name: Python Code Quality
 on:
   push:
   pull_request:
@@ -16,3 +16,22 @@ jobs:
         with:
           options: --check --verbose
           src: .
+  other:
+    name: Other
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Multiple other Python code quality check tools combined
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Code Quality tools
+        run: pip install ruff flake8 mypy isort
+      - name: Ruff extremely fast Python linter and code formatter
+        run: ruff check */*.py
+      - name: Flake8 (with Black compatible settings)
+        run: flake8 --max-line-length=88 --extend-ignore=E203,E701 */*.py
+      - name: Mypy strict static type checking
+        run: mypy --strict */*.py
+      - name: Isort imports alphabetically, separated into sections and by type
+        run: isort --check --diff --profile black */*.py
