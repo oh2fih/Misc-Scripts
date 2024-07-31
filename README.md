@@ -18,8 +18,9 @@ Miscellaneous scripts for different purposes. Mostly unrelated to each other.
 | Infosec<br>Automation | [`make-mac-prefixes.py`](bin/make-mac-prefixes.py)<br>Python 3 | Processes registered MAC address prefixes from [IEEE MA-L Assignments (CSV)](https://standards.ieee.org/products-programs/regauth/) (stdin) to Nmap's [`nmap-mac-prefixes`](https://github.com/nmap/nmap/blob/master/nmap-mac-prefixes)  (stdout) with a few additional unregistered OUIs.<br>`curl https://standards-oui.ieee.org/oui/oui.csv \| make-mac-prefixes.py > nmap-mac-prefixes` |
 | WordPress | [`test-cache-enabler.py`](bin/test-cache-enabler.py)<br>Python 3 | Tests whether the Cache Enabler by KeyCDN (WordPress) is working properly on the URLs given as arguments.<br>`test-cache-enabler.py https://example.com [...]` |
 | Web | [`detect-modified-html-element.sh`](bin/detect-modified-html-element.sh)<br>Shell (bash) | Checks HTML element changes on a web page since last run. Configured via environment variables.<br>Recommended to be executed as a SystemD [service](systemd/detect-modified-html-element.service.example). |
+| Web | [`product-pricelimiter.sh`](bin/product-pricelimiter.sh)<br>Shell (bash) | Compare product price on a web page with a given maximum price. Use, e.g., developer tools on your browser to find the HTML element containing the price.<br>`product-pricelimiter.sh ProductURL Element MaxPrice` |
 | Web | <del>`koronarokotusaika.sh`</del><br>Shell (bash) | This script has been removed as koronarokotusaika.fi (bookcovidvaccine.fi) has been shut down on April 28, 2023. |
-| Web | [`xxl-product-pricelimiter.sh`](bin/xxl-product-pricelimiter.sh)<br>Shell (bash) | XXL.fi product price checker / limiter.<br>`xxl-product-pricelimiter.sh XXL.fi-ProductURL MaxPrice` |
+| Web | <del>`xxl-product-pricelimiter.sh`</del><br>Shell (bash) | This script has been replaced by the generalized [`product-pricelimiter.sh`](bin/product-pricelimiter.sh) as the HTML structure of XXL.fi has changed. |
 
 ## Scripts that require `sudo` privileges ([`sbin/`](sbin/))
 
