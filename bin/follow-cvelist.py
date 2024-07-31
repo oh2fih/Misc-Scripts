@@ -529,7 +529,7 @@ if __name__ == "__main__":
         description="Follow changes (commits) in CVEProject / cvelistV5",
         usage="%(prog)s [-haou4] [-vvvv] [-i s] [-c N]",
         epilog="Requires git. "
-        "Working directory must be the root of cvelistV5 repository.",
+        "Working directory must be the root of the cvelistV5 repository.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     argParser.add_argument(
