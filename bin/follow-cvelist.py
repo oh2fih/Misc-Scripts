@@ -584,16 +584,14 @@ if __name__ == "__main__":
         default=30,
     )
     args = argParser.parse_args()
-    match args.verbose:
-        case 4:
-            print(
-                "VERBOSITY: raw json, raw changes, git pulls, commit IDs",
-                file=sys.stderr,
-            )
-        case 3:
-            print("VERBOSITY: raw changes, git pulls, commit IDs", file=sys.stderr)
-        case 2:
-            print("VERBOSITY: git pulls, commit IDs", file=sys.stderr)
-        case 1:
-            print("VERBOSITY: commit IDs", file=sys.stderr)
+    if args.verbose > 4:
+        args.verbose = 4
+    verbosity = {
+        4: "raw json, raw changes, git pulls, commit ID",
+        3: "raw changes, git pulls, commit IDs",
+        2: "git pulls, commit IDs",
+        1: "commit IDs",
+    }
+    if args.verbose > 0:
+        print(f"VERBOSITY: {verbosity[args.verbose]}", file=sys.stderr)
     main(args)
