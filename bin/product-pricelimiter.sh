@@ -7,7 +7,7 @@ read -r -d '' USAGE << EOM
 #
 #   ProductURL  web page URL to fetch the current price from
 #   Element     the HTML element containing the price (#id or .class)
-#   MaxPrice    float number
+#   MaxPrice    maximum price used for comparison; float number
 #   N           in case there are multiple floats in the element, choose Nth
 #
 # Exit codes:
@@ -102,7 +102,7 @@ if [ "$element_contents" == "" ]; then
   exit 1
 fi
 
-# Extract prices from the element
+# Extract prices from the element & Nth price from the prices.
 
 prices=$(
   echo "$element_contents" \
@@ -123,11 +123,8 @@ if (( n > count )); then
   echo -e "using the last one (#$count) for comparison!\033[0m" >&2
   n="$count"
 fi
-price=$(
-  echo "$prices" \
-    | head -n "$n" \
-    | tail -n 1
-  )
+
+price=$(echo "$prices" | head -n "$n" | tail -n 1)
 
 # Compare (Nth or first) price with the limit.
 # If installed, use bc for more accurate comparison.
@@ -158,21 +155,21 @@ if [ "$maxprice" == "$price" ]; then
 fi
 
 if [ "$isLower" = 1 ]; then
-    echo -ne "\033[0;32mGood to buy! "
-    echo -e "The price (#$n in \"$selector\") is now $price\033[0m"
-    if command -v bc &> /dev/null; then
-      diff=$(echo "scale=2; ($maxprice - $price)/1" | bc)
-      echo -ne "\033[0;32mThat is $diff lower "
-      echo -e "than the max price ($maxprice)\033[0m"
-    fi
-    exit 0
+  echo -ne "\033[0;32mGood to buy! "
+  echo -e "The price (#$n in \"$selector\") is now $price\033[0m"
+  if command -v bc &> /dev/null; then
+    diff=$(echo "scale=2; ($maxprice - $price)/1" | bc)
+    echo -ne "\033[0;32mThat is $diff lower "
+    echo -e "than the maximum price ($maxprice)\033[0m"
+  fi
+  exit 0
 else
-    echo -ne "\033[0;33mPlease be patient! "
-    echo -e "The price (#$n in \"$selector\") is still $price\033[0m"
-    if command -v bc &> /dev/null; then
-      diff=$(echo "scale=2; ($price - $maxprice)/1" | bc)
-      echo -ne "\033[0;33mThat is $diff higher "
-      echo -e "than the max price ($maxprice)\033[0m"
-    fi
-    exit 2
+  echo -ne "\033[0;33mPlease be patient! "
+  echo -e "The price (#$n in \"$selector\") is still $price\033[0m"
+  if command -v bc &> /dev/null; then
+    diff=$(echo "scale=2; ($price - $maxprice)/1" | bc)
+    echo -ne "\033[0;33mThat is $diff higher "
+    echo -e "than the maximum price ($maxprice)\033[0m"
+  fi
+  exit 2
 fi
