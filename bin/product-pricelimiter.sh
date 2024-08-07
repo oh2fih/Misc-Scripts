@@ -3,11 +3,12 @@ read -r -d '' USAGE << EOM
 # ------------------------------------------------------------------------------
 # Compare product price on a web page with a given maximum price.
 #
-# Usage: product-pricelimiter.sh ProductURL Element MaxPrice
+# Usage: product-pricelimiter.sh ProductURL Element MaxPrice [N]
 #
 #   ProductURL  web page URL to fetch the current price from
 #   Element     the HTML element containing the price (#id or .class)
 #   MaxPrice    float number
+#   N           in case there are multiple floats in the element, choose Nth
 #
 # Exit codes:
 #
@@ -27,7 +28,7 @@ UA+="(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 
 # Test the inputs...
 
-if [ "$#" -ne 3 ]; then
+if [ "$#" -lt 3 ]; then
   echo -e "\033[0;33m${USAGE}\033[0m" >&2
   exit 1
 fi
@@ -39,6 +40,17 @@ if [[ "$3" =~ ^[+-]?[0-9]+[\.,]?[0-9]*$ ]] 2>/dev/null; then
 else
   echo -e "\033[0;31mMax price should be a (float) number!\033[0m" >&2
   exit 1
+fi
+
+if [ "$#" -ge 4 ]; then
+  if [[ "$4" =~ ^[0-9]+$ ]] ; then
+    n="$4"
+  else
+    echo -e "\033[0;31mN should be an integer!\033[0m" >&2
+    exit 1
+  fi
+else
+  n=1
 fi
 
 # Validate the URL
@@ -88,26 +100,41 @@ if [ "$element_contents" == "" ]; then
   exit 1
 fi
 
-# Extract price (first match) from the element and compare it with the limit
+# Extract prices from the element and compare Nth or first with the limit
 
-price=$(
+prices=$(
   echo "$element_contents" \
-    | grep -m 1 -Eo '[0-9]+([,\.][0-9]{0,2})?' \
-    | sed 's/,/./g' | head -n 1
+    | grep -Eo '[0-9]+([,\.][0-9]{0,2})?' \
+    | sed 's/,/./g' \
   )
-if [ "$price" == "" ]; then
-  echo -e "\033[0;31mPrice not found from \"${selector}\"!\033[0m" >&2
+if [ "$prices" == "" ]; then
+  echo -e "\033[0;31mPrices not found from \"$selector\"!\033[0m" >&2
   exit 1
+else
+  echo -e "\033[0;32mPrices (float numbers) in \"$selector\":\033[0m" >&2
+  echo "$prices" | cat -n | grep --color=always -e "^" -e "\s$n\s.*" >&2 
 fi
+
+count=$(echo "$prices" | wc -l)
+if (( n > count )); then
+  echo -ne "\033[0;33mNot enough numbers ($n); "
+  echo -e "using the last one (#$count) for comparison!\033[0m" >&2
+  n="$count"
+fi
+price=$(
+  echo "$prices" \
+    | head -n "$n" \
+    | tail -n 1
+  )
 
 lower=$(printf "%s\n%s" "$price" "$maxprice" | sort -g | head -1)
 
 if [ "$lower" = "$price" ]; then
     echo -ne "\033[0;32mGood to buy! "
-    echo -e "The price in \"$selector\" is now $price €\033[0m"
+    echo -e "The price (#$n in \"$selector\") is now $price €\033[0m"
     exit 0
 else
     echo -ne "\033[0;33mPlease be patient! "
-    echo -e "The price in \"$selector\" is still $price €\033[0m"
+    echo -e "The price (#$n in \"$selector\") is still $price €\033[0m"
     exit 2
 fi
