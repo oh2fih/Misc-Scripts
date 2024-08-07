@@ -132,9 +132,19 @@ lower=$(printf "%s\n%s" "$price" "$maxprice" | sort -g | head -1)
 if [ "$lower" = "$price" ]; then
     echo -ne "\033[0;32mGood to buy! "
     echo -e "The price (#$n in \"$selector\") is now $price €\033[0m"
+    if command -v bc &> /dev/null; then
+      diff=$(echo "scale=2; $maxprice - $price" | bc)
+      echo -ne "\033[0;32mThat is $diff € lower "
+      echo -e "than the max price ($maxprice €)\033[0m"
+    fi
     exit 0
 else
     echo -ne "\033[0;33mPlease be patient! "
     echo -e "The price (#$n in \"$selector\") is still $price €\033[0m"
+    if command -v bc &> /dev/null; then
+      diff=$(echo "scale=2; $price - $maxprice" | bc)
+      echo -ne "\033[0;33mThat is $diff € higher "
+      echo -e "than the max price ($maxprice €)\033[0m"
+    fi
     exit 2
 fi
