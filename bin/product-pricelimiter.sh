@@ -16,6 +16,8 @@ read -r -d '' USAGE << EOM
 #   1  ERROR  An error has occured; unable to tell the result.
 #   2  WAIT   Price is found but higher than the MaxPrice.
 #
+# It is recommended to have 'bc' installed for more accurate comparison.
+#
 # Author : Esa Jokinen (oh2fih)
 # Home   : https://github.com/oh2fih/Misc-Scripts
 # ------------------------------------------------------------------------------
@@ -100,7 +102,7 @@ if [ "$element_contents" == "" ]; then
   exit 1
 fi
 
-# Extract prices from the element and compare Nth or first with the limit
+# Extract prices from the element
 
 prices=$(
   echo "$element_contents" \
@@ -117,7 +119,7 @@ fi
 
 count=$(echo "$prices" | wc -l)
 if (( n > count )); then
-  echo -ne "\033[0;33mNot enough numbers ($n); "
+  echo -ne "\033[0;33mNot enough numbers ($n); " >&2
   echo -e "using the last one (#$count) for comparison!\033[0m" >&2
   n="$count"
 fi
@@ -127,13 +129,39 @@ price=$(
     | tail -n 1
   )
 
-lower=$(printf "%s\n%s" "$price" "$maxprice" | sort -g | head -1)
+# Compare (Nth or first) price with the limit.
+# If installed, use bc for more accurate comparison.
 
-if [ "$lower" = "$price" ]; then
+if command -v bc &> /dev/null; then
+  price=$(echo "scale=2; ${price}/1" | bc)
+  maxprice=$(echo "scale=2; ${maxprice}/1" | bc)
+  if (( $(echo "$maxprice > $price" | bc -l) )); then
+    isLower=1
+  else
+    isLower=0
+  fi
+else
+  echo -ne "\033[0;33mWarning! Install 'bc' for more accurate comparison; " >&2
+  echo -e "using a fallback solution!\033[0m" >&2
+  lower=$(printf "%s\n%s" "$price" "$maxprice" | sort -g | head -1)
+  if [ "$lower" = "$price" ]; then
+    isLower=1
+  else
+    isLower=0
+  fi
+fi
+
+if [ "$maxprice" == "$price" ]; then
+  echo -ne "\033[0;32mGood to buy! "
+  echo -e "The price (#$n in \"$selector\") is now exactly $price €\033[0m"
+  exit 0
+fi
+
+if [ "$isLower" = 1 ]; then
     echo -ne "\033[0;32mGood to buy! "
     echo -e "The price (#$n in \"$selector\") is now $price €\033[0m"
     if command -v bc &> /dev/null; then
-      diff=$(echo "scale=2; $maxprice - $price" | bc)
+      diff=$(echo "scale=2; ($maxprice - $price)/1" | bc)
       echo -ne "\033[0;32mThat is $diff € lower "
       echo -e "than the max price ($maxprice €)\033[0m"
     fi
@@ -142,7 +170,7 @@ else
     echo -ne "\033[0;33mPlease be patient! "
     echo -e "The price (#$n in \"$selector\") is still $price €\033[0m"
     if command -v bc &> /dev/null; then
-      diff=$(echo "scale=2; $price - $maxprice" | bc)
+      diff=$(echo "scale=2; ($price - $maxprice)/1" | bc)
       echo -ne "\033[0;33mThat is $diff € higher "
       echo -e "than the max price ($maxprice €)\033[0m"
     fi
