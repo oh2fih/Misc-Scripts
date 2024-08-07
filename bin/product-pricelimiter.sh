@@ -115,7 +115,8 @@ if [ "$prices" == "" ]; then
   exit 1
 else
   echo -e "\033[0;32mPrices (float numbers) in \"${selector}\":\033[0m" >&2
-  echo "$prices" | cat -n | grep --color=always -e "^" -e "\s$n\s.*" >&2 
+  export GREP_COLORS='ms=00;32'
+  echo "$prices" | cat -n | grep --color=always -e "^" -e "\s${n}\s.*" >&2
 fi
 
 count=$(echo "$prices" | wc -l)
