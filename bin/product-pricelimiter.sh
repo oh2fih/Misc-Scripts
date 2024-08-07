@@ -98,7 +98,8 @@ element_contents=$(
     | hxselect -c "$selector"
   )
 if [ "$element_contents" == "" ]; then
-  echo -e "\033[0;31mFailed to fetch \"$selector\" in ${producturl}\033[0m" >&2
+  echo -ne "\033[0;31mFailed to fetch \"${selector}\" "
+  echo -e "in ${producturl}\033[0m" >&2
   exit 1
 fi
 
@@ -110,32 +111,43 @@ prices=$(
     | sed 's/,/./g' \
   )
 if [ "$prices" == "" ]; then
-  echo -e "\033[0;31mPrices not found from \"$selector\"!\033[0m" >&2
+  echo -e "\033[0;31mPrices not found from \"${selector}\"!\033[0m" >&2
   exit 1
 else
-  echo -e "\033[0;32mPrices (float numbers) in \"$selector\":\033[0m" >&2
+  echo -e "\033[0;32mPrices (float numbers) in \"${selector}\":\033[0m" >&2
   echo "$prices" | cat -n | grep --color=always -e "^" -e "\s$n\s.*" >&2 
 fi
 
 count=$(echo "$prices" | wc -l)
 if (( n > count )); then
-  echo -ne "\033[0;33mNot enough numbers ($n); " >&2
-  echo -e "using the last one (#$count) for comparison!\033[0m" >&2
+  echo -ne "\033[0;33mNot enough numbers (${n}); " >&2
+  echo -e "using the last one (#${count}) for comparison!\033[0m" >&2
   n="$count"
 fi
 
 price=$(echo "$prices" | head -n "$n" | tail -n 1)
+echo -e "\033[0;32mThe price (#${n} in \"${selector}\") is now ${price}\033[0m"
 
 # Compare (Nth or first) price with the limit.
 # If installed, use bc for more accurate comparison.
 
 if command -v bc &> /dev/null; then
-  price=$(echo "scale=2; ${price}/1" | bc)
-  maxprice=$(echo "scale=2; ${maxprice}/1" | bc)
-  if (( $(echo "$maxprice > $price" | bc -l) )); then
-    isLower=1
-  else
+  price=$(echo "scale=2; ${price}/1" | bc | sed 's/^\./0./')
+  maxprice=$(echo "scale=2; ${maxprice}/1" | bc | sed 's/^\./0./')
+  diff=$(
+    echo "scale=2; (${maxprice} - ${price})/1" \
+      | bc \
+      | sed 's/-//' \
+      | sed 's/^\./0./'
+    )
+  if (( $(echo "${maxprice} < ${price}" | bc -l) )); then
     isLower=0
+    echo -ne "\033[0;33mMaximum price ${maxprice}; "
+    echo -e "the price is ${diff} higher\033[0m"
+  else
+    isLower=1
+    echo -ne "\033[0;32mMaximum price ${maxprice}; "
+    echo -e "the price is ${diff} lower\033[0m"
   fi
 else
   echo -ne "\033[0;33mWarning! Install 'bc' for more accurate comparison; " >&2
@@ -148,28 +160,10 @@ else
   fi
 fi
 
-if [ "$maxprice" == "$price" ]; then
-  echo -ne "\033[0;32mGood to buy! "
-  echo -e "The price (#$n in \"$selector\") is now exactly $price\033[0m"
-  exit 0
-fi
-
-if [ "$isLower" = 1 ]; then
-  echo -ne "\033[0;32mGood to buy! "
-  echo -e "The price (#$n in \"$selector\") is now $price\033[0m"
-  if command -v bc &> /dev/null; then
-    diff=$(echo "scale=2; ($maxprice - $price)/1" | bc)
-    echo -ne "\033[0;32mThat is $diff lower "
-    echo -e "than the maximum price ($maxprice)\033[0m"
-  fi
+if [ "$maxprice" == "$price" ] || [ "$isLower" = 1 ]; then
+  echo -e "\033[0;32mGood to buy!\033[0m"
   exit 0
 else
-  echo -ne "\033[0;33mPlease be patient! "
-  echo -e "The price (#$n in \"$selector\") is still $price\033[0m"
-  if command -v bc &> /dev/null; then
-    diff=$(echo "scale=2; ($price - $maxprice)/1" | bc)
-    echo -ne "\033[0;33mThat is $diff higher "
-    echo -e "than the maximum price ($maxprice)\033[0m"
-  fi
+  echo -e "\033[0;33mPlease be patient!\033[0m"
   exit 2
 fi
