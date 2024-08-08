@@ -3,14 +3,15 @@ read -r -d '' USAGE << EOM
 # ------------------------------------------------------------------------------
 # Compare product price on a web page with a given maximum price.
 #
-# Usage: product-pricelimiter.sh -u ProductURL -s Selector [-m MaxPrice] [-n N]
+# Usage: product-pricelimiter.sh -u URL -s Selector [-m MaxPrice] [-n N] [-d N]
 #
-#   -u ProductURL  web page URL to fetch the current price from
-#   -s Selector    the HTML element containing the price; search the price from
-#                  elements or attributes that match a (CSS) selector (e.g.
-#                  h3, #id, .class or combinations like "#id div.class")
-#   -m MaxPrice    maximum price used for comparison; float number
-#   -n N           in case there are multiple floats in the element, choose Nth
+#   -u URL       web page URL to fetch the current price from
+#   -s Selector  the HTML element containing the price; search the price from
+#                elements or attributes that match a (CSS) selector (e.g.
+#                h3, #id, .class or combinations like "#id div.class")
+#   -m MaxPrice  maximum price used for comparison; float number
+#   -n N         in case there are multiple floats in the element, choose Nth
+#   -d N         use N decimals in the currency; requires 'bc' (default: 2)
 #
 # Exit codes:
 #
@@ -18,6 +19,7 @@ read -r -d '' USAGE << EOM
 #   1  ERROR  An error has occured; unable to tell the result.
 #   2  WAIT   Price is found but higher than the MaxPrice.
 #
+# Requires html-xml-utils (hxselect & hxnormalize).
 # It is recommended to have 'bc' installed for more accurate comparison.
 #
 # Author : Esa Jokinen (oh2fih)
@@ -33,9 +35,10 @@ UA+="(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 # Validate arguments
 
 n=1
+d=2
 INVALID=0
 
-while getopts ":hu:s:m:n:" opt; do
+while getopts ":hu:s:m:n:d:" opt; do
   case ${opt} in
     h)
       # Allow -h for help; invalid or missing arguments prints the usage anyway.
@@ -61,10 +64,22 @@ while getopts ":hu:s:m:n:" opt; do
       fi
       ;;
     n)
-      if [[ "$OPTARG" =~ ^[0-9]+$ ]] ; then
+      if [[ "$OPTARG" =~ ^[0-9]+$ ]]; then
         n="$OPTARG"
       else
-        echo -e "\033[0;31mN (-n) should be an integer!\033[0m" >&2
+        echo -e "\033[0;31mNth element (-n) should be an integer!\033[0m" >&2
+        ((INVALID=INVALID+1))
+      fi
+      ;;
+    d)
+      if [[ "$OPTARG" =~ ^[0-9]+$ ]]; then
+        d="$OPTARG"
+      else
+        echo -e "\033[0;31mDecimals (-d) should be an integer!\033[0m" >&2
+        ((INVALID=INVALID+1))
+      fi
+      if (( d > 14)); then
+        echo -e "\033[0;31mNo currency has >14 decimals (-d)!\033[0m" >&2
         ((INVALID=INVALID+1))
       fi
       ;;
@@ -156,7 +171,7 @@ fi
 
 price=$(echo "$prices" | head -n "$n" | tail -n 1)
 if command -v bc &> /dev/null; then
-  price=$(echo "scale=2; ${price}/1" | bc | sed 's/^\./0./')
+  price=$(echo "scale=${d}; ${price}/1" | bc | sed 's/^\./0./')
 fi
 echo -e "\033[0;32mThe price (#${n} in '${selector}') is now ${price}\033[0m"
 
@@ -165,9 +180,9 @@ echo -e "\033[0;32mThe price (#${n} in '${selector}') is now ${price}\033[0m"
 
 if [ -n "$maxprice" ]; then
   if command -v bc &> /dev/null; then
-    maxprice=$(echo "scale=2; ${maxprice}/1" | bc | sed 's/^\./0./')
+    maxprice=$(echo "scale=${d}; ${maxprice}/1" | bc | sed 's/^\./0./')
     diff=$(
-      echo "scale=2; (${maxprice} - ${price})/1" \
+      echo "scale=${d}; (${maxprice} - ${price})/1" \
         | bc \
         | sed 's/-//' \
         | sed 's/^\./0./'
