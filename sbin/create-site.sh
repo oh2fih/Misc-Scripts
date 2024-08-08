@@ -37,17 +37,17 @@ if [ -z "$PHPVERSION" ]; then
     echo "*** ERROR! \$PHPVERSION not configured & could not autodetect"
     exit 1
   else
-    echo "--- Detected PHP version: $PHPVERSION"
+    echo "--- Detected PHP version: ${PHPVERSION}"
   fi
 else
-  echo "--- Configured PHP version: $PHPVERSION"
+  echo "--- Configured PHP version: ${PHPVERSION}"
 fi
 
 
 ### Check for sudo privileges and the requirements.
 
 if [ "$#" -le 1 ]; then
-  echo "Usage: sudo $0 username example.com [www.example.com ...]"
+  echo "Usage: sudo ${0} username example.com [www.example.com ...]"
   exit 1
 fi
 
@@ -82,7 +82,7 @@ fi
 ### Check that the hostnames are pointing to the server.
 
 MYIP=$(hostname -I | cut -d " " -f1)
-echo "--- My IP address is $MYIP. Comparing..."
+echo "--- My IP address is ${MYIP}. Comparing..."
 
 additional_hostnames=""
 letsencrypt_hostnames=""
@@ -101,13 +101,13 @@ for hostname in "${@:2}"; do
     if [ "$MYIP" = "$ip_of_hostname" ]; then
       echo "  - $validated_hostname [$ip_of_hostname] OK"
       if [ "$letsencrypt_hostnames" = "" ]; then
-        letsencrypt_hostnames=$(echo "$validated_hostname" | xargs)
+    letsencrypt_hostnames=$(echo "$validated_hostname" | xargs)
       else
-        additional_hostnames=$(echo "$additional_hostnames $validated_hostname" | xargs)
-        letsencrypt_hostnames=$(echo "$letsencrypt_hostnames,$validated_hostname" | xargs)
+    additional_hostnames=$(echo "${additional_hostnames} ${validated_hostname}" | xargs)
+    letsencrypt_hostnames=$(echo "${letsencrypt_hostnames},${validated_hostname}" | xargs)
       fi
     else
-      echo "*** ERROR! $validated_hostname [$ip_of_hostname] not pointing to [$MYIP]"
+      echo "*** ERROR! ${validated_hostname} [${ip_of_hostname}] not pointing to [${MYIP}]"
       ((hostname_errors=hostname_errors+1))
     fi
   fi
@@ -115,7 +115,7 @@ done
 
 if [ "$hostname_errors" -gt 0 ]; then
   if [ "$hostname_errors" -gt 1 ]; then
-    echo "*** ERROR! Multiple ($hostname_errors) hostnames are invalid or not pointing to this server"
+    echo "*** ERROR! Multiple (${hostname_errors}) hostnames are invalid or not pointing to this server"
   else
     echo "*** ERROR! A hostname is invalid or not pointing to this server"
   fi
@@ -125,8 +125,8 @@ fi
 
 ### Validate the necessary services are running.
 
-systemctl is-active --quiet "php$PHPVERSION-fpm" \
-  || { echo "*** ERROR! service php$PHPVERSION-fpm not running." ; exit 1; }
+systemctl is-active --quiet "php${PHPVERSION}-fpm" \
+  || { echo "*** ERROR! service php${PHPVERSION}-fpm not running." ; exit 1; }
 systemctl is-active --quiet "apache2" \
   || { echo "*** ERROR! service apache2 not running." ; exit 1; }
 
@@ -141,10 +141,10 @@ fi
 
 ### Create the webroot directory with correct permission.
 
-echo "--- Creating webroot directory /var/www/$1/$2"
-mkdir -p "/var/www/$1/$2"
-chown "$1:www-data" "/var/www/$1/$2"
-chmod 750 "/var/www/$1/$2"
+echo "--- Creating webroot directory /var/www/${1}/${2}"
+mkdir -p "/var/www/${1}/${2}"
+chown "${1}:www-data" "/var/www/${1}/${2}"
+chmod 750 "/var/www/${1}/${2}"
 
 
 ### Ensure common alias for LE HTTP-01 validation & get LE certificate.
@@ -155,7 +155,7 @@ cat <<'EOF' \
   | tee "/etc/apache2/conf-available/common-letsencrypt-path.conf" \
   || { echo "*** ERROR! Unable to write /etc/apache2/conf-available/common-letsencrypt-path.conf" ; exit 1; }
 <IfModule alias_module>
-        Alias /.well-known/acme-challenge/ WEBROOT/.well-known/acme-challenge/
+    Alias /.well-known/acme-challenge/ WEBROOT/.well-known/acme-challenge/
 </IfModule>
 EOF
 
@@ -174,11 +174,11 @@ certbot certonly --noninteractive --agree-tos -d "$letsencrypt_hostnames" \
 
 ### Create configuration files.
 
-echo "=== WRITING CONFIGURATION FILE /etc/php/$PHPVERSION/fpm/pool.d/$1.conf ==="
+echo "=== WRITING CONFIGURATION FILE /etc/php/${PHPVERSION}/fpm/pool.d/${1}.conf ==="
 
 cat <<'EOF' \
-  | sed "s/USERNAME/$1/" \
-  | tee "/etc/php/$PHPVERSION/fpm/pool.d/$1.conf"
+  | sed "s/USERNAME/${1}/" \
+  | tee "/etc/php/${PHPVERSION}/fpm/pool.d/${1}.conf"
 [USERNAME]
 user = USERNAME
 group = USERNAME
@@ -202,105 +202,105 @@ php_admin_value[cgi.fix_pathinfo] = 1
 security.limit_extensions =
 EOF
 
-echo "=== WRITING CONFIGURATION FILE /etc/apache2/sites-enabled/$2.conf ==="
+echo "=== WRITING CONFIGURATION FILE /etc/apache2/sites-enabled/${2}.conf ==="
 
 if [ "$additional_hostnames" = "" ]; then
   cat <<'EOF' \
-    | sed "s/USERNAME/$1/" \
-    | sed "s/MAINHOSTNAME/$2/" \
-    | tee "/etc/apache2/sites-available/$2.conf"
+    | sed "s/USERNAME/${1}/" \
+    | sed "s/MAINHOSTNAME/${2}/" \
+    | tee "/etc/apache2/sites-available/${2}.conf"
 <VirtualHost *:80>
-        ServerName MAINHOSTNAME
+    ServerName MAINHOSTNAME
 
-        Redirect permanent / https://MAINHOSTNAME/
+    Redirect permanent / https://MAINHOSTNAME/
 </VirtualHost>
 
 <VirtualHost *:443>
-        ServerName MAINHOSTNAME
+    ServerName MAINHOSTNAME
 
-        SSLEngine on
-        SSLCertificateFile /etc/letsencrypt/live/MAINHOSTNAME/fullchain.pem
-        SSLCertificateKeyFile /etc/letsencrypt/live/MAINHOSTNAME/privkey.pem
-        SSLVerifyClient None
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/MAINHOSTNAME/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/MAINHOSTNAME/privkey.pem
+    SSLVerifyClient None
 
-        DocumentRoot /var/www/USERNAME/MAINHOSTNAME
+    DocumentRoot /var/www/USERNAME/MAINHOSTNAME
 
-        <FilesMatch "\.php$">
-                SetHandler  "proxy:unix:/run/php/USERNAME.sock|fcgi://localhost"
-        </FilesMatch>
-        <Proxy "fcgi://localhost/">
-        </Proxy>
+    <FilesMatch "\.php$">
+        SetHandler  "proxy:unix:/run/php/USERNAME.sock|fcgi://localhost"
+    </FilesMatch>
+    <Proxy "fcgi://localhost/">
+    </Proxy>
 
-        <IfModule mod_headers.c>
-                Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
-        </IfModule>
+    <IfModule mod_headers.c>
+        Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+    </IfModule>
 
-        ErrorLog ${APACHE_LOG_DIR}/MAINHOSTNAME-error.log
-        CustomLog ${APACHE_LOG_DIR}/MAINHOSTNAME-access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/MAINHOSTNAME-error.log
+    CustomLog ${APACHE_LOG_DIR}/MAINHOSTNAME-access.log combined
 </VirtualHost>
 EOF
 
 else
   cat <<'EOF' \
-    | sed "s/USERNAME/$1/" \
-    | sed "s/MAINHOSTNAME/$2/" \
-    | sed "s/ADDITIONALHOSTNAMES/$additional_hostnames/" \
-    | tee "/etc/apache2/sites-available/$2.conf"
+    | sed "s/USERNAME/${1}/" \
+    | sed "s/MAINHOSTNAME/${2}/" \
+    | sed "s/ADDITIONALHOSTNAMES/${additional_hostnames}/" \
+    | tee "/etc/apache2/sites-available/${2}.conf"
 <VirtualHost *:80>
-        ServerName MAINHOSTNAME
-        ServerAlias ADDITIONALHOSTNAMES
+    ServerName MAINHOSTNAME
+    ServerAlias ADDITIONALHOSTNAMES
 
-        Redirect permanent / https://MAINHOSTNAME/
+    Redirect permanent / https://MAINHOSTNAME/
 </VirtualHost>
 
 <VirtualHost *:443>
-        ServerName MAINHOSTNAME
+    ServerName MAINHOSTNAME
 
-        SSLEngine on
-        SSLCertificateFile /etc/letsencrypt/live/MAINHOSTNAME/fullchain.pem
-        SSLCertificateKeyFile /etc/letsencrypt/live/MAINHOSTNAME/privkey.pem
-        SSLVerifyClient None
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/MAINHOSTNAME/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/MAINHOSTNAME/privkey.pem
+    SSLVerifyClient None
 
-        DocumentRoot /var/www/USERNAME/MAINHOSTNAME
+    DocumentRoot /var/www/USERNAME/MAINHOSTNAME
 
-        <FilesMatch "\.php$">
-                SetHandler  "proxy:unix:/run/php/USERNAME.sock|fcgi://localhost"
-        </FilesMatch>
-        <Proxy "fcgi://localhost/">
-        </Proxy>
+    <FilesMatch "\.php$">
+        SetHandler  "proxy:unix:/run/php/USERNAME.sock|fcgi://localhost"
+    </FilesMatch>
+    <Proxy "fcgi://localhost/">
+    </Proxy>
 
-        <IfModule mod_headers.c>
-                Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
-        </IfModule>
+    <IfModule mod_headers.c>
+        Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+    </IfModule>
 
-        ErrorLog ${APACHE_LOG_DIR}/MAINHOSTNAME-error.log
-        CustomLog ${APACHE_LOG_DIR}/MAINHOSTNAME-access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/MAINHOSTNAME-error.log
+    CustomLog ${APACHE_LOG_DIR}/MAINHOSTNAME-access.log combined
 </VirtualHost>
 
 <VirtualHost *:443>
-        ServerName JUST4REDIR.MAINHOSTNAME
-        ServerAlias ADDITIONALHOSTNAMES
+    ServerName JUST4REDIR.MAINHOSTNAME
+    ServerAlias ADDITIONALHOSTNAMES
 
-        SSLEngine on
-        SSLCertificateFile /etc/letsencrypt/live/MAINHOSTNAME/fullchain.pem
-        SSLCertificateKeyFile /etc/letsencrypt/live/MAINHOSTNAME/privkey.pem
-        SSLVerifyClient None
-        
-        <IfModule mod_headers.c>
-                Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
-        </IfModule>
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/MAINHOSTNAME/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/MAINHOSTNAME/privkey.pem
+    SSLVerifyClient None
 
-        Redirect permanent / https://MAINHOSTNAME/
+    <IfModule mod_headers.c>
+        Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+    </IfModule>
+
+    Redirect permanent / https://MAINHOSTNAME/
 </VirtualHost>
 EOF
 
 fi
 
 echo "=== Enabling the site created ==="
-systemctl reload "php$PHPVERSION-fpm" \
-  || echo "*** ERROR! Unable to reload php$PHPVERSION-fpm"
+systemctl reload "php${PHPVERSION}-fpm" \
+  || echo "*** ERROR! Unable to reload php${PHPVERSION}-fpm"
 a2ensite "$2" \
-  || echo "*** ERROR! Unable to enable $2.conf"
+  || echo "*** ERROR! Unable to enable ${2}.conf"
 echo "--- Reloading Apache2."
 systemctl reload apache2 \
   || echo "*** ERROR! Unable to reload apache2"
@@ -310,5 +310,5 @@ systemctl reload apache2 \
 
 if command -v etckeeper > /dev/null 2>&1; then
   echo "--- Commit changes with etckeeper."
-  etckeeper commit "$0 $*"
+  etckeeper commit "${0} $*"
 fi
