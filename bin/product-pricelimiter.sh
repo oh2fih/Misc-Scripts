@@ -11,7 +11,7 @@ read -r -d '' USAGE << EOM
 #                h3, #id, .class or combinations like "#id div.class")
 #   -m MaxPrice  maximum price used for comparison; float number
 #   -n N         in case there are multiple floats in the element, choose Nth
-#   -d N         use N decimals in the currency; requires 'bc' (default: 2)
+#   -d 0..14     use 0..14 decimals in the currency; requires 'bc' (default: 2)
 #
 # Exit codes:
 #
@@ -144,25 +144,30 @@ element_contents=$(
     | hxselect -c "$selector"
   )
 if [ "$element_contents" == "" ]; then
-  echo -ne "\033[0;31mFailed to fetch \"${selector}\" "
+  echo -ne "\033[0;31mFailed to fetch '${selector}' "
   echo -e "in ${producturl}\033[0m" >&2
   exit 1
 fi
 
 # Extract prices from the element & Nth price from the prices.
 
+if (( d > 0)); then
+  priceregex="(0|[1-9][0-9]*)([,\.][0-9]{1,${d}})?"
+else
+  priceregex="[0-9]+"
+fi
 prices=$(
   echo "$element_contents" \
-    | grep -Eo '(0|[1-9][0-9]*)([,\.][0-9]{1,14})?' \
+    | grep -Eo "$priceregex" \
     | sed 's/,/./g' \
   )
 if [ "$prices" == "" ]; then
-  echo -ne "\033[0;31mPotential prices (float numbers) " >&2
-  echo -e "not found in '${selector}'!\033[0m" >&2
+  echo -ne "\033[0;31mPotential prices (float numbers, max ${d} " >&2
+  echo -e "decimals) not found in '${selector}'!\033[0m" >&2
   exit 1
 else
-  echo -ne "\033[0;32mPotential prices (float numbers) " >&2
-  echo -e "in '${selector}':\033[0m" >&2
+  echo -ne "\033[0;32mPotential prices (float numbers, max ${d} " >&2
+  echo -e "decimals) in '${selector}':\033[0m" >&2
   export GREP_COLORS='ms=00;32'
   echo "$prices" | cat -n | grep --color=always -e "^" -e "\s${n}\s.*" >&2
 fi
