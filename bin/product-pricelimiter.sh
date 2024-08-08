@@ -3,12 +3,14 @@ read -r -d '' USAGE << EOM
 # ------------------------------------------------------------------------------
 # Compare product price on a web page with a given maximum price.
 #
-# Usage: product-pricelimiter.sh ProductURL Element [MaxPrice] [N]
+# Usage: product-pricelimiter.sh -u ProductURL -s Selector [-m MaxPrice] [-n N]
 #
-#   ProductURL  web page URL to fetch the current price from
-#   Element     the HTML element containing the price (#id or .class)
-#   MaxPrice    maximum price used for comparison; float number
-#   N           in case there are multiple floats in the element, choose Nth
+#   -u ProductURL  web page URL to fetch the current price from
+#   -s Selector    the HTML element containing the price; search the price from
+#                  elements or attributes that match a (CSS) selector (e.g.
+#                  h3, #id, .class or combinations like "#id div.class")
+#   -m MaxPrice    maximum price used for comparison; float number
+#   -n N           in case there are multiple floats in the element, choose Nth
 #
 # Exit codes:
 #
@@ -28,41 +30,62 @@ EOM
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
 UA+="(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 
-# Test the inputs...
+# Validate arguments
 
-if [ "$#" -lt 2 ]; then
+n=1
+INVALID=0
+
+while getopts ":hu:s:m:n:" opt; do
+  case ${opt} in
+    h)
+      # Allow -h for help; invalid or missing arguments prints the usage anyway.
+      ;;
+    u)
+      producturl="$OPTARG"
+      regex='http(s)?://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+      if ! [[ $producturl =~ $regex ]]; then
+        echo -e "\033[0;31mThe argument for -u was not a valid URL!\033[0m" >&2
+        echo -e "\033[0;31m(Expecting regex: ${regex} )\033[0m" >&2
+        ((INVALID=INVALID+1))
+      fi
+      ;;
+    s)
+      selector="$OPTARG"
+      ;;
+    m)
+      if [[ "$OPTARG" =~ ^[+-]?[0-9]+[\.,]?[0-9]*$ ]] 2>/dev/null; then
+        maxprice=$(printf "%s" "$OPTARG" | sed 's/,/./g')
+      else
+        echo -e "\033[0;31mMaxPrice (-m) should be a (float) number!\033[0m" >&2
+        ((INVALID=INVALID+1))
+      fi
+      ;;
+    n)
+      if [[ "$OPTARG" =~ ^[0-9]+$ ]] ; then
+        n="$OPTARG"
+      else
+        echo -e "\033[0;31mN (-n) should be an integer!\033[0m" >&2
+        ((INVALID=INVALID+1))
+      fi
+      ;;
+    \?)
+      echo -e "\033[0;31mInvalid option: -${OPTARG}\033[0m" >&2
+      ((INVALID=INVALID+1))
+      ;;
+    :)
+      echo -e "\033[0;31mOption -${OPTARG} requires an argument\033[0m" >&2
+      ((INVALID=INVALID+1))
+      ;;
+  esac
+done
+
+if [ -z "$producturl" ] || [ -z "$selector" ]; then
+  echo -e "\033[0;31mMissing mandatory options (-u or -s)!\033[0m" >&2
+  ((INVALID=INVALID+1))
+fi
+
+if [ "$INVALID" -gt 0 ]; then
   echo -e "\033[0;33m${USAGE}\033[0m" >&2
-  exit 1
-fi
-
-producturl="$1"
-selector="$2"
-
-if [ "$#" -ge 3 ]; then
-  if [[ "$3" =~ ^[+-]?[0-9]+[\.,]?[0-9]*$ ]] 2>/dev/null; then
-    maxprice=$(printf "%s" "$3" | sed 's/,/./g')
-  else
-    echo -e "\033[0;31mMax price should be a (float) number!\033[0m" >&2
-    exit 1
-  fi
-fi
-
-if [ "$#" -ge 4 ]; then
-  if [[ "$4" =~ ^[0-9]+$ ]] ; then
-    n="$4"
-  else
-    echo -e "\033[0;31mN should be an integer!\033[0m" >&2
-    exit 1
-  fi
-else
-  n=1
-fi
-
-# Validate the URL
-
-regex='(https?)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-if ! [[ $producturl =~ $regex ]]; then
-  echo -e "\033[0;31mThe first argument was not a valid URL!\033[0m" >&2
   exit 1
 fi
 
@@ -114,10 +137,12 @@ prices=$(
     | sed 's/,/./g' \
   )
 if [ "$prices" == "" ]; then
-  echo -e "\033[0;31mPrices not found from \"${selector}\"!\033[0m" >&2
+  echo -ne "\033[0;31mPotential prices (float numbers) " >&2
+  echo -e "not found in '${selector}'!\033[0m" >&2
   exit 1
 else
-  echo -e "\033[0;32mPrices (float numbers) in \"${selector}\":\033[0m" >&2
+  echo -ne "\033[0;32mPotential prices (float numbers) " >&2
+  echo -e "in '${selector}':\033[0m" >&2
   export GREP_COLORS='ms=00;32'
   echo "$prices" | cat -n | grep --color=always -e "^" -e "\s${n}\s.*" >&2
 fi
@@ -130,14 +155,16 @@ if (( n > count )); then
 fi
 
 price=$(echo "$prices" | head -n "$n" | tail -n 1)
-echo -e "\033[0;32mThe price (#${n} in \"${selector}\") is now ${price}\033[0m"
+if command -v bc &> /dev/null; then
+  price=$(echo "scale=2; ${price}/1" | bc | sed 's/^\./0./')
+fi
+echo -e "\033[0;32mThe price (#${n} in '${selector}') is now ${price}\033[0m"
 
 # Compare (Nth or first) price with the limit.
 # If installed, use bc for more accurate comparison.
 
-if [ "$#" -ge 3 ]; then
+if [ -n "$maxprice" ]; then
   if command -v bc &> /dev/null; then
-    price=$(echo "scale=2; ${price}/1" | bc | sed 's/^\./0./')
     maxprice=$(echo "scale=2; ${maxprice}/1" | bc | sed 's/^\./0./')
     diff=$(
       echo "scale=2; (${maxprice} - ${price})/1" \
@@ -146,11 +173,11 @@ if [ "$#" -ge 3 ]; then
         | sed 's/^\./0./'
       )
     if (( $(echo "${maxprice} < ${price}" | bc -l) )); then
-      isLower=0
+      isLowerOrEqual=0
       echo -ne "\033[0;33mMaximum price ${maxprice}; "
       echo -e "the price is ${diff} higher\033[0m"
     else
-      isLower=1
+      isLowerOrEqual=1
       echo -ne "\033[0;32mMaximum price ${maxprice}; "
       echo -e "the price is ${diff} lower\033[0m"
     fi
@@ -159,13 +186,13 @@ if [ "$#" -ge 3 ]; then
     echo -e "comparison; using a fallback solution!\033[0m" >&2
     lower=$(printf "%s\n%s" "$price" "$maxprice" | sort -g | head -1)
     if [ "$lower" = "$price" ]; then
-      isLower=1
+      isLowerOrEqual=1
     else
-      isLower=0
+      isLowerOrEqual=0
     fi
   fi
 
-  if [ "$maxprice" == "$price" ] || [ "$isLower" = 1 ]; then
+  if [ "$maxprice" == "$price" ] || [ "$isLowerOrEqual" = 1 ]; then
     echo -e "\033[0;32mGood to buy!\033[0m"
     exit 0
   else
