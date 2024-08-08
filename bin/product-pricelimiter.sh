@@ -82,6 +82,9 @@ while getopts ":hu:s:m:n:d:" opt; do
         echo -e "\033[0;31mNo currency has >14 decimals (-d)!\033[0m" >&2
         ((INVALID=INVALID+1))
       fi
+      if ! command -v bc &> /dev/null; then
+        echo -e "\033[0;33mWarning! 'bc' is required for -d!\033[0m" >&2
+      fi
       ;;
     \?)
       echo -e "\033[0;31mInvalid option: -${OPTARG}\033[0m" >&2
@@ -101,7 +104,6 @@ fi
 
 if [ "$INVALID" -gt 0 ]; then
   echo -e "\033[0;33m${USAGE}\033[0m" >&2
-  exit 1
 fi
 
 # Check for requirements. Print all unmet requirements at once.
@@ -126,11 +128,11 @@ required_command "grep" "for parsing float numbers from the page content"
 required_command "sed" "for normalizing decimal separators"
 required_command "head" "for picking the correct number as the price"
 required_command "tail" "for picking the correct number as the price"
-if command -v bc &> /dev/null; then
+if ! command -v bc &> /dev/null; then
   required_command "sort" "or (recommended) bc for comparing float numbers"
 fi
 
-if [ "$UNMET" -gt 0 ]; then
+if [ "$UNMET" -gt 0 ] || [ "$INVALID" -gt 0 ]; then
   exit 1
 fi
 
@@ -151,7 +153,7 @@ fi
 
 prices=$(
   echo "$element_contents" \
-    | grep -Eo '[0-9]+([,\.][0-9]{0,2})?' \
+    | grep -Eo '(0|[1-9][0-9]*)([,\.][0-9]{1,14})?' \
     | sed 's/,/./g' \
   )
 if [ "$prices" == "" ]; then
@@ -205,8 +207,12 @@ if [ -n "$maxprice" ]; then
     lower=$(printf "%s\n%s" "$price" "$maxprice" | sort -g | head -1)
     if [ "$lower" = "$price" ]; then
       isLowerOrEqual=1
+      echo -ne "\033[0;32mThat is lower than (or equal to) "
+      echo -e "the maximum price of ${maxprice}\033[0m"
     else
       isLowerOrEqual=0
+      echo -ne "\033[0;33mThat is higher than "
+      echo -e "the maximum price of ${maxprice}\033[0m"
     fi
   fi
 
