@@ -19,7 +19,7 @@ read -r -d '' USAGE << EOM
 #   1  ERROR  An error has occured; unable to tell the result.
 #   2  WAIT   Price is found but higher than the MaxPrice.
 #
-# Requires html-xml-utils (hxselect & hxnormalize).
+# Requires html-xml-utils for parsing the HTML & curl for fetching the page.
 # It is recommended to have 'bc' installed for more accurate comparison.
 #
 # Author : Esa Jokinen (oh2fih)
@@ -121,11 +121,14 @@ UNMET=0
 
 required_command "hxselect" "; Please install html-xml-utils"
 required_command "hxnormalize" "; Please install html-xml-utils"
-required_command "grep" "for parsing the page content"
-required_command "sed" "for converting delimiters"
 required_command "curl" "for fetching the web page"
-required_command "sort" "for comparing float numbers"
-required_command "head" "for comparing float numbers"
+required_command "grep" "for parsing float numbers from the page content"
+required_command "sed" "for normalizing decimal separators"
+required_command "head" "for picking the correct number as the price"
+required_command "tail" "for picking the correct number as the price"
+if command -v bc &> /dev/null; then
+  required_command "sort" "or (recommended) bc for comparing float numbers"
+fi
 
 if [ "$UNMET" -gt 0 ]; then
   exit 1
