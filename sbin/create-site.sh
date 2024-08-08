@@ -87,11 +87,13 @@ echo "--- My IP address is ${MYIP}. Comparing..."
 additional_hostnames=""
 letsencrypt_hostnames=""
 hostname_errors=0
+hostname_regex='(?=^.{5,254}$)(^(?:(?!\d+\.)'
+hostname_regex+='[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)'
 
 for hostname in "${@:2}"; do
   validated_hostname=$(
     echo "$hostname" \
-      | grep -P '(?=^.{5,254}$)(^(?:(?!\d+\.)[a-zA-Z0-9_\-]{1,63}\.?)+(?:[a-zA-Z]{2,})$)'
+      | grep -P "$hostname_regex"
     )
   if [ -z "$validated_hostname" ]; then
     echo "*** ERROR! $hostname is not valid!"
@@ -101,13 +103,20 @@ for hostname in "${@:2}"; do
     if [ "$MYIP" = "$ip_of_hostname" ]; then
       echo "  - $validated_hostname [$ip_of_hostname] OK"
       if [ "$letsencrypt_hostnames" = "" ]; then
-    letsencrypt_hostnames=$(echo "$validated_hostname" | xargs)
+        letsencrypt_hostnames=$(echo "$validated_hostname" | xargs)
       else
-    additional_hostnames=$(echo "${additional_hostnames} ${validated_hostname}" | xargs)
-    letsencrypt_hostnames=$(echo "${letsencrypt_hostnames},${validated_hostname}" | xargs)
+        additional_hostnames=$(
+          echo "${additional_hostnames} ${validated_hostname}" \
+           | xargs
+         )
+        letsencrypt_hostnames=$(
+         echo "${letsencrypt_hostnames},${validated_hostname}" \
+           | xargs
+         )
       fi
     else
-      echo "*** ERROR! ${validated_hostname} [${ip_of_hostname}] not pointing to [${MYIP}]"
+      echo -n "*** ERROR! ${validated_hostname} [${ip_of_hostname}] "
+      echo "not pointing to [${MYIP}]"
       ((hostname_errors=hostname_errors+1))
     fi
   fi
@@ -115,7 +124,8 @@ done
 
 if [ "$hostname_errors" -gt 0 ]; then
   if [ "$hostname_errors" -gt 1 ]; then
-    echo "*** ERROR! Multiple (${hostname_errors}) hostnames are invalid or not pointing to this server"
+    echo -n "*** ERROR! Multiple (${hostname_errors}) hostnames "
+    echo "are invalid or not pointing to this server"
   else
     echo "*** ERROR! A hostname is invalid or not pointing to this server"
   fi
@@ -149,11 +159,15 @@ chmod 750 "/var/www/${1}/${2}"
 
 ### Ensure common alias for LE HTTP-01 validation & get LE certificate.
 
-echo "=== WRITING CONFIGURATION FILE /etc/apache2/conf-available/common-letsencrypt-path.conf ==="
+le_conf="common-letsencrypt-path"
+le_conf_path="/etc/apache2/conf-available/${le_conf}.conf"
+
+echo -n "=== WRITING CONFIGURATION FILE "
+echo "${le_conf_path} ==="
 cat <<'EOF' \
   | sed "s|WEBROOT|$LETSENCRYPT_WEBROOT|" \
-  | tee "/etc/apache2/conf-available/common-letsencrypt-path.conf" \
-  || { echo "*** ERROR! Unable to write /etc/apache2/conf-available/common-letsencrypt-path.conf" ; exit 1; }
+  | tee "$le_conf_path" \
+  || { echo "*** ERROR! Unable to write ${le_conf_path}" ; exit 1; }
 <IfModule alias_module>
     Alias /.well-known/acme-challenge/ WEBROOT/.well-known/acme-challenge/
 </IfModule>
@@ -161,7 +175,7 @@ EOF
 
 echo "=== Enabling Let's Encrypt common webroot configuration ==="
 a2enconf common-letsencrypt-path \
-  || { echo "*** ERROR! Unable to enable common-letsencrypt-path.conf" ; exit 1; }
+  || { echo "*** ERROR! Unable to enable ${le_conf}.conf" ; exit 1; }
 echo "--- Reloading Apache2."
 systemctl reload apache2 \
   || { echo "*** ERROR! Unable to reload apache2" ; exit 1; }
@@ -174,11 +188,12 @@ certbot certonly --noninteractive --agree-tos -d "$letsencrypt_hostnames" \
 
 ### Create configuration files.
 
-echo "=== WRITING CONFIGURATION FILE /etc/php/${PHPVERSION}/fpm/pool.d/${1}.conf ==="
+pool_conf_path="/etc/php/${PHPVERSION}/fpm/pool.d/${1}.conf"
+echo "=== WRITING CONFIGURATION FILE ${pool_conf_path} ==="
 
 cat <<'EOF' \
   | sed "s/USERNAME/${1}/" \
-  | tee "/etc/php/${PHPVERSION}/fpm/pool.d/${1}.conf"
+  | tee "$pool_conf_path"
 [USERNAME]
 user = USERNAME
 group = USERNAME
@@ -232,7 +247,8 @@ if [ "$additional_hostnames" = "" ]; then
     </Proxy>
 
     <IfModule mod_headers.c>
-        Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        Header always set Strict-Transport-Security \
+            "max-age=63072000; includeSubDomains; preload"
     </IfModule>
 
     ErrorLog ${APACHE_LOG_DIR}/MAINHOSTNAME-error.log
@@ -270,7 +286,8 @@ else
     </Proxy>
 
     <IfModule mod_headers.c>
-        Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        Header always set Strict-Transport-Security \
+            "max-age=63072000; includeSubDomains; preload"
     </IfModule>
 
     ErrorLog ${APACHE_LOG_DIR}/MAINHOSTNAME-error.log
@@ -287,7 +304,8 @@ else
     SSLVerifyClient None
 
     <IfModule mod_headers.c>
-        Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        Header always set Strict-Transport-Security \
+            "max-age=63072000; includeSubDomains; preload"
     </IfModule>
 
     Redirect permanent / https://MAINHOSTNAME/
