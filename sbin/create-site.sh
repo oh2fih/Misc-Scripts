@@ -25,8 +25,8 @@
 
 ### CONFIGURATION
 
-PHPVERSION=""
-LETSENCRYPT_WEBROOT="/var/www/letsencrypt"
+PHPVERSION="${PHPVERSION:-}"
+LETSENCRYPT_WEBROOT="${LETSENCRYPT_WEBROOT:-/var/www/letsencrypt}"
 
 
 ### Autodetect PHP version
