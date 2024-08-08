@@ -3,7 +3,7 @@ read -r -d '' USAGE << EOM
 # ------------------------------------------------------------------------------
 # Compare product price on a web page with a given maximum price.
 #
-# Usage: product-pricelimiter.sh ProductURL Element MaxPrice [N]
+# Usage: product-pricelimiter.sh ProductURL Element [MaxPrice] [N]
 #
 #   ProductURL  web page URL to fetch the current price from
 #   Element     the HTML element containing the price (#id or .class)
@@ -30,18 +30,21 @@ UA+="(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
 
 # Test the inputs...
 
-if [ "$#" -lt 3 ]; then
+if [ "$#" -lt 2 ]; then
   echo -e "\033[0;33m${USAGE}\033[0m" >&2
   exit 1
 fi
 
-if [[ "$3" =~ ^[+-]?[0-9]+[\.,]?[0-9]*$ ]] 2>/dev/null; then
-  producturl="$1"
-  selector="$2"
-  maxprice=$(printf "%s" "$3" | sed 's/,/./g')
-else
-  echo -e "\033[0;31mMax price should be a (float) number!\033[0m" >&2
-  exit 1
+producturl="$1"
+selector="$2"
+
+if [ "$#" -ge 3 ]; then
+  if [[ "$3" =~ ^[+-]?[0-9]+[\.,]?[0-9]*$ ]] 2>/dev/null; then
+    maxprice=$(printf "%s" "$3" | sed 's/,/./g')
+  else
+    echo -e "\033[0;31mMax price should be a (float) number!\033[0m" >&2
+    exit 1
+  fi
 fi
 
 if [ "$#" -ge 4 ]; then
@@ -132,39 +135,41 @@ echo -e "\033[0;32mThe price (#${n} in \"${selector}\") is now ${price}\033[0m"
 # Compare (Nth or first) price with the limit.
 # If installed, use bc for more accurate comparison.
 
-if command -v bc &> /dev/null; then
-  price=$(echo "scale=2; ${price}/1" | bc | sed 's/^\./0./')
-  maxprice=$(echo "scale=2; ${maxprice}/1" | bc | sed 's/^\./0./')
-  diff=$(
-    echo "scale=2; (${maxprice} - ${price})/1" \
-      | bc \
-      | sed 's/-//' \
-      | sed 's/^\./0./'
-    )
-  if (( $(echo "${maxprice} < ${price}" | bc -l) )); then
-    isLower=0
-    echo -ne "\033[0;33mMaximum price ${maxprice}; "
-    echo -e "the price is ${diff} higher\033[0m"
+if [ "$#" -ge 3 ]; then
+  if command -v bc &> /dev/null; then
+    price=$(echo "scale=2; ${price}/1" | bc | sed 's/^\./0./')
+    maxprice=$(echo "scale=2; ${maxprice}/1" | bc | sed 's/^\./0./')
+    diff=$(
+      echo "scale=2; (${maxprice} - ${price})/1" \
+        | bc \
+        | sed 's/-//' \
+        | sed 's/^\./0./'
+      )
+    if (( $(echo "${maxprice} < ${price}" | bc -l) )); then
+      isLower=0
+      echo -ne "\033[0;33mMaximum price ${maxprice}; "
+      echo -e "the price is ${diff} higher\033[0m"
+    else
+      isLower=1
+      echo -ne "\033[0;32mMaximum price ${maxprice}; "
+      echo -e "the price is ${diff} lower\033[0m"
+    fi
   else
-    isLower=1
-    echo -ne "\033[0;32mMaximum price ${maxprice}; "
-    echo -e "the price is ${diff} lower\033[0m"
+    echo -ne "\033[0;33mWarning! Install 'bc' for more accurate " >&2
+    echo -e "comparison; using a fallback solution!\033[0m" >&2
+    lower=$(printf "%s\n%s" "$price" "$maxprice" | sort -g | head -1)
+    if [ "$lower" = "$price" ]; then
+      isLower=1
+    else
+      isLower=0
+    fi
   fi
-else
-  echo -ne "\033[0;33mWarning! Install 'bc' for more accurate comparison; " >&2
-  echo -e "using a fallback solution!\033[0m" >&2
-  lower=$(printf "%s\n%s" "$price" "$maxprice" | sort -g | head -1)
-  if [ "$lower" = "$price" ]; then
-    isLower=1
-  else
-    isLower=0
-  fi
-fi
 
-if [ "$maxprice" == "$price" ] || [ "$isLower" = 1 ]; then
-  echo -e "\033[0;32mGood to buy!\033[0m"
-  exit 0
-else
-  echo -e "\033[0;33mPlease be patient!\033[0m"
-  exit 2
+  if [ "$maxprice" == "$price" ] || [ "$isLower" = 1 ]; then
+    echo -e "\033[0;32mGood to buy!\033[0m"
+    exit 0
+  else
+    echo -e "\033[0;33mPlease be patient!\033[0m"
+    exit 2
+  fi
 fi
