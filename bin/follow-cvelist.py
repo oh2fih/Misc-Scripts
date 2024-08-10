@@ -448,17 +448,18 @@ class CvelistFollower:
     def json_at_commit(self, path: Path, commit: str) -> Any:
         """Dictionary of JSON file contents at given commit"""
         try:
+            pathstr = path.as_posix()  # for Windows compatibility
             result = subprocess.run(
-                ["git", "show", f"{commit}:{path}"], stdout=subprocess.PIPE
+                ["git", "show", f"{commit}:{pathstr}"], stdout=subprocess.PIPE
             )
             data = json.loads(result.stdout.decode("utf-8"))
             if self.args.verbose > 3:
-                print(f"[{commit}:{path}] {data}", file=sys.stderr)
+                print(f"[{commit}:{pathstr}] {data}", file=sys.stderr)
             return data
         except IOError:
-            print(f"Could not open {commit}:{path}", file=sys.stderr)
+            print(f"Could not open {commit}:{pathstr}", file=sys.stderr)
         except json.decoder.JSONDecodeError:
-            print(f"Could not parse {commit}:{path}", file=sys.stderr)
+            print(f"Could not parse {commit}:{pathstr}", file=sys.stderr)
         return {}
 
     def cvelist_repo(self) -> bool:
@@ -471,7 +472,7 @@ class CvelistFollower:
             working = Path(os.getcwd())
 
             if os.path.samefile(str(toplevel), str(working)):
-                readmefile = open("README.md", "r")
+                readmefile = open("README.md", "r", encoding="utf-8")
                 readme = readmefile.readlines()
                 readmefile.close()
                 for line in readme:
