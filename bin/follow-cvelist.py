@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-haou4] [-vvvv] [-i s] [-c N] [-w c]
+# Usage: follow-cvelist.py [-haou4] [-vvvv] [-i s] [-c N] [-w N]
 #
 #  -h, --help          show this help message and exit
 #  -a, --ansi          add ansi colors to the output (default: False)
@@ -13,7 +13,7 @@
 #  -v, --verbose       each -v increases verbosity (commits, git pull, raw data)
 #  -i s, --interval s  pull interval in seconds (default: 150)
 #  -c N, --commits N   number of commits to print initially (default: 30)
-#  -w c, --width c     overwrite autodetected terminal width (<50 => multiline)
+#  -w N, --width N     overwrite autodetected terminal width (<50 => multiline)
 #
 # Requires git. Working directory must be the root of the cvelistV5 repository.
 #
@@ -597,7 +597,7 @@ if __name__ == "__main__":
         "-w",
         "--width",
         type=check_positive,
-        metavar="c",
+        metavar="N",
         help="overwrite autodetected terminal width (<50 => multiline)",
     )
     args = argParser.parse_args()
