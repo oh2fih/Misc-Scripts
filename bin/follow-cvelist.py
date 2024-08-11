@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-haou4] [-vvvv] [-i s] [-c N]
+# Usage: follow-cvelist.py [-haou4] [-vvvv] [-i s] [-c N] [-w c]
 #
 #  -h, --help          show this help message and exit
 #  -a, --ansi          add ansi colors to the output (default: False)
@@ -13,6 +13,7 @@
 #  -v, --verbose       each -v increases verbosity (commits, git pull, raw data)
 #  -i s, --interval s  pull interval in seconds (default: 150)
 #  -c N, --commits N   number of commits to print initially (default: 30)
+#  -w c, --width c     overwrite autodetected terminal width (<50 => multiline)
 #
 # Requires git. Working directory must be the root of the cvelistV5 repository.
 #
@@ -89,6 +90,16 @@ class CvelistFollower:
             )
             sys.exit(0)
 
+    def width(self) -> int:
+        """Configured or detected terminal width for line lenght limits"""
+        if args.width:
+            return int(args.width)
+        else:
+            try:
+                return os.get_terminal_size()[0]
+            except OSError:
+                return 1
+
     def header(self) -> None:
         """Print header"""
         if self.args.cvss4:
@@ -106,10 +117,7 @@ class CvelistFollower:
             f"{cvss_title.ljust(10)} SUMMARY [vendor: product]",
             file=sys.stderr,
         )
-        try:
-            print(f"{''.ljust(os.get_terminal_size()[0], '-')}", file=sys.stderr)
-        except OSError:
-            print(f"{''.ljust(80, '-')}", file=sys.stderr)
+        print(f"{''.ljust(self.width(), '-')}", file=sys.stderr)
 
     def history(self) -> None:
         """Prints CVE changes from the commit history, one commit at a time"""
@@ -174,14 +182,15 @@ class CvelistFollower:
     def print_changes(self, current_commit: str, past_commit: str) -> None:
         """Print summary of changed CVE"""
         lines = []
-        try:
+        # multiline mode if terminal width is too small to fit summary on the same line
+        if self.width() >= 50:
             if self.args.ansi:
                 # add extra width for invisible characters (ANSI codes)
-                width = os.get_terminal_size()[0] + 21
+                width = self.width() + 21
             else:
                 # substract one character to fit occasional wide characters like emojis
-                width = os.get_terminal_size()[0] - 1
-        except OSError:
+                width = self.width() - 1
+        else:
             width = False
 
         for change in self.get_changes(current_commit, past_commit):
@@ -583,6 +592,13 @@ if __name__ == "__main__":
         metavar="N",
         help="number of commits to print initially",
         default=30,
+    )
+    argParser.add_argument(
+        "-w",
+        "--width",
+        type=check_positive,
+        metavar="c",
+        help="overwrite autodetected terminal width (<50 => multiline)",
     )
     args = argParser.parse_args()
     if args.verbose > 4:
