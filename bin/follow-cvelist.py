@@ -3,11 +3,12 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-haou4] [-vvvv] [-i s] [-c N] [-w N]
+# Usage: follow-cvelist.py [-haoru4] [-vvvv] [-i s] [-c N] [-w N]
 #
 #  -h, --help          show this help message and exit
 #  -a, --ansi          add ansi colors to the output (default: False)
 #  -o, --once          only the current tail; no active follow (default: False)
+#  -r, --reload-only   skip pulls & only follow local changes (default: False)
 #  -u, --url           prefix cve with url to nvd nist details (default: False)
 #  -4, --cvss4         show cvss 4.0 score instead of cvss 3.1 (default: False)
 #  -v, --verbose       each -v increases verbosity (commits, git pull, raw data)
@@ -39,7 +40,8 @@ from typing import Any, Dict, List
 def main(args: argparse.Namespace) -> None:
     cvelist = CvelistFollower(args)
     cvelist.header()
-    cvelist.pull()
+    if not args.reload_only:
+        cvelist.pull()
     cvelist.history()
     if not args.once:
         cvelist.monitor()
@@ -148,7 +150,13 @@ class CvelistFollower:
             for x in range(self.args.interval):
                 self.check_interrupt()
                 time.sleep(1)
-            self.pull()
+            if not self.args.reload_only:
+                self.pull()
+            elif self.args.verbose > 1:
+                print(
+                    f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  Reload",
+                    file=sys.stderr,
+                )
             new_cursor = self.get_cursor()
             if new_cursor != cursor:
                 if self.args.verbose > 0:
@@ -162,7 +170,11 @@ class CvelistFollower:
             result = subprocess.run(
                 ["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             )
-            print(result.stdout.decode("utf-8").strip(), file=sys.stderr)
+            print(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
+                f"{result.stdout.decode('utf-8').strip()}",
+                file=sys.stderr,
+            )
         else:
             subprocess.call(
                 ["git", "pull"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
@@ -537,7 +549,7 @@ def check_positive(value: str) -> int:
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser(
         description="Follow changes (commits) in CVEProject / cvelistV5",
-        usage="%(prog)s [-haou4] [-vvvv] [-i s] [-c N]",
+        usage="%(prog)s [-haoru4] [-vvvv] [-i s] [-c N] [-w N]",
         epilog="Requires git. "
         "Working directory must be the root of the cvelistV5 repository.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -554,6 +566,13 @@ if __name__ == "__main__":
         "--once",
         action="store_true",
         help="only the current tail; no active follow",
+        default=False,
+    )
+    argParser.add_argument(
+        "-r",
+        "--reload-only",
+        action="store_true",
+        help="skip pulls & only follow local changes",
         default=False,
     )
     argParser.add_argument(
@@ -582,7 +601,7 @@ if __name__ == "__main__":
         "--interval",
         type=check_positive,
         metavar="s",
-        help="pull interval in seconds",
+        help="pull/reload interval in seconds",
         default=150,
     )
     argParser.add_argument(
@@ -611,4 +630,10 @@ if __name__ == "__main__":
     }
     if args.verbose > 0:
         print(f"VERBOSITY: {verbosity[args.verbose]}", file=sys.stderr)
+    if args.reload_only:
+        print(
+            "Reload only mode; "
+            "make sure the periodic 'git pull' gets run somewhere else",
+            file=sys.stderr,
+        )
     main(args)
