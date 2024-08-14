@@ -165,20 +165,23 @@ class CvelistFollower:
                 cursor = new_cursor
 
     def pull(self) -> None:
-        """Runs git pull"""
+        """Runs git pull. Exits if it fails."""
+        result = subprocess.run(
+            ["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         if self.args.verbose > 1:
-            result = subprocess.run(
-                ["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-            )
             print(
                 f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
                 f"{result.stdout.decode('utf-8').strip()}",
                 file=sys.stderr,
             )
-        else:
-            subprocess.call(
-                ["git", "pull"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+        if result.returncode > 0:
+            print(
+                f"\n{result.stderr.decode('utf-8').strip()}\n{ANSI.code('red')}"
+                f"Manual intervention required; 'git pull' failed!{ANSI.code('end')}",
+                file=sys.stderr,
             )
+            sys.exit(1)
 
     def get_cursor(self, offset: int = 0) -> str:
         """Gets commit id at the offset from the current head"""
