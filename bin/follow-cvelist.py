@@ -190,11 +190,8 @@ class CvelistFollower:
                         f"{result.stderr.decode('utf-8').strip()}",
                         file=sys.stderr,
                     )
-                    begin = ""
-                    end = ""
-                    if self.args.ansi:
-                        begin = f"{ANSI.code('red')}"
-                        end = f"{ANSI.code('end')}"
+                    begin = f"{ANSI.code('red')}" if self.args.ansi else ""
+                    end = f"{ANSI.code('end')}" if self.args.ansi else ""
                     print(
                         f"{begin}Manual intervention (or -F/--force) "
                         f"required; 'git pull' failed permanently!{end}",
@@ -210,11 +207,8 @@ class CvelistFollower:
         if self.args.verbose > 1:
             print(f"{result.stdout.decode('utf-8').strip()}", file=sys.stderr)
         if result.returncode > 0:
-            begin = ""
-            end = ""
-            if self.args.ansi:
-                begin = f"{ANSI.code('yellow')}"
-                end = f"{ANSI.code('end')}"
+            begin = f"{ANSI.code('yellow')}" if self.args.ansi else ""
+            end = f"{ANSI.code('end')}" if self.args.ansi else ""
             print(
                 f"{begin}{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
                 f"Fetch failed; connectivity issues?{end}",
@@ -225,11 +219,8 @@ class CvelistFollower:
 
     def reset_repo(self) -> None:
         """Tries to recover from git pull errors by hard resetting to origin/main"""
-        begin = ""
-        end = ""
-        if self.args.ansi:
-            begin = f"{ANSI.code('yellow')}"
-            end = f"{ANSI.code('end')}"
+        begin = f"{ANSI.code('yellow')}" if self.args.ansi else ""
+        end = f"{ANSI.code('end')}" if self.args.ansi else ""
         print(
             f"{begin}{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}"
             f"  Recovering from a failed git pull...{end}",
@@ -243,22 +234,16 @@ class CvelistFollower:
         if self.args.verbose > 1:
             print(f"{result.stdout.decode('utf-8').strip()}", file=sys.stderr)
         if result.returncode > 0:
-            begin = ""
-            end = ""
-            if self.args.ansi:
-                begin = f"{ANSI.code('red')}"
-                end = f"{ANSI.code('end')}"
+            begin = f"{ANSI.code('red')}" if self.args.ansi else ""
+            end = f"{ANSI.code('end')}" if self.args.ansi else ""
             print(
                 f"{begin}Hard reset to origin/main failed; "
                 f"manual intervention required!{end}",
                 file=sys.stderr,
             )
             sys.exit(1)
-        begin = ""
-        end = ""
-        if self.args.ansi:
-            begin = f"{ANSI.code('green')}"
-            end = f"{ANSI.code('end')}"
+        begin = f"{ANSI.code('green')}" if self.args.ansi else ""
+        end = f"{ANSI.code('end')}" if self.args.ansi else ""
         print(f"{begin}Successfully recovered.{end}", file=sys.stderr)
 
     def get_cursor(self, offset: int = 0) -> str:
