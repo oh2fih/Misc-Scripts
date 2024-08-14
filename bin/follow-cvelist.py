@@ -3,10 +3,11 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-haoru4] [-vvvv] [-i s] [-c N] [-w N]
+# Usage: follow-cvelist.py [-haForu4] [-vvvv] [-i s] [-c N] [-w N]
 #
 #  -h, --help          show this help message and exit
 #  -a, --ansi          add ansi colors to the output (default: False)
+#  -F, --force         origin/main hard reset if git pull fails (default: False)
 #  -o, --once          only the current tail; no active follow (default: False)
 #  -r, --reload-only   skip pulls & only follow local changes (default: False)
 #  -u, --url           prefix cve with url to nvd nist details (default: False)
@@ -165,7 +166,7 @@ class CvelistFollower:
                 cursor = new_cursor
 
     def pull(self) -> None:
-        """Runs git pull. Exits if it fails."""
+        """Runs git pull. Exits on permanent, unrecoverable errors"""
         result = subprocess.run(
             ["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -176,12 +177,89 @@ class CvelistFollower:
                 file=sys.stderr,
             )
         if result.returncode > 0:
+            if self.fetch_all():
+                if self.args.force:
+                    if self.args.verbose > 1:
+                        print(
+                            f"{result.stderr.decode('utf-8').strip()}",
+                            file=sys.stderr,
+                        )
+                    self.reset_repo()
+                else:
+                    print(
+                        f"{result.stderr.decode('utf-8').strip()}",
+                        file=sys.stderr,
+                    )
+                    begin = ""
+                    end = ""
+                    if self.args.ansi:
+                        begin = f"{ANSI.code('red')}"
+                        end = f"{ANSI.code('end')}"
+                    print(
+                        f"{begin}Manual intervention (or -F/--force) "
+                        f"required; 'git pull' failed permanently!{end}",
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
+
+    def fetch_all(self) -> bool:
+        """Try fetch; good for distinguishing connectivity issues from other failures"""
+        result = subprocess.run(
+            ["git", "fetch", "--all"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
+        if self.args.verbose > 1:
+            print(f"{result.stdout.decode('utf-8').strip()}", file=sys.stderr)
+        if result.returncode > 0:
+            begin = ""
+            end = ""
+            if self.args.ansi:
+                begin = f"{ANSI.code('yellow')}"
+                end = f"{ANSI.code('end')}"
             print(
-                f"\n{result.stderr.decode('utf-8').strip()}\n{ANSI.code('red')}"
-                f"Manual intervention required; 'git pull' failed!{ANSI.code('end')}",
+                f"{begin}{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
+                f"Fetch failed; connectivity issues?{end}",
+                file=sys.stderr,
+            )
+            return False  # fetch failed
+        return True  # fetch successful
+
+    def reset_repo(self) -> None:
+        """Tries to recover from git pull errors by hard resetting to origin/main"""
+        begin = ""
+        end = ""
+        if self.args.ansi:
+            begin = f"{ANSI.code('yellow')}"
+            end = f"{ANSI.code('end')}"
+        print(
+            f"{begin}{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}"
+            f"  Recovering from a failed git pull...{end}",
+            file=sys.stderr,
+        )
+        result = subprocess.run(
+            ["git", "reset", "--hard", "origin/main"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        if self.args.verbose > 1:
+            print(f"{result.stdout.decode('utf-8').strip()}", file=sys.stderr)
+        if result.returncode > 0:
+            begin = ""
+            end = ""
+            if self.args.ansi:
+                begin = f"{ANSI.code('red')}"
+                end = f"{ANSI.code('end')}"
+            print(
+                f"{begin}Hard reset to origin/main failed; "
+                f"manual intervention required!{end}",
                 file=sys.stderr,
             )
             sys.exit(1)
+        begin = ""
+        end = ""
+        if self.args.ansi:
+            begin = f"{ANSI.code('green')}"
+            end = f"{ANSI.code('end')}"
+        print(f"{begin}Successfully recovered.{end}", file=sys.stderr)
 
     def get_cursor(self, offset: int = 0) -> str:
         """Gets commit id at the offset from the current head"""
@@ -552,7 +630,7 @@ def check_positive(value: str) -> int:
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser(
         description="Follow changes (commits) in CVEProject / cvelistV5",
-        usage="%(prog)s [-haoru4] [-vvvv] [-i s] [-c N] [-w N]",
+        usage="%(prog)s [-haForu4] [-vvvv] [-i s] [-c N] [-w N]",
         epilog="Requires git. "
         "Working directory must be the root of the cvelistV5 repository.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -562,6 +640,13 @@ if __name__ == "__main__":
         "--ansi",
         action="store_true",
         help="add ansi colors to the output",
+        default=False,
+    )
+    argParser.add_argument(
+        "-F",
+        "--force",
+        action="store_true",
+        help="origin/main hard reset if git pull fails",
         default=False,
     )
     argParser.add_argument(
