@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install Code Quality tools
-        run: pip install ruff flake8 mypy isort
+        run: pip install ruff flake8 mypy isort vermin
       - name: Ruff extremely fast Python linter and code formatter
         run: ruff check */*.py
       - name: Flake8 (with Black compatible settings)
@@ -35,3 +35,5 @@ jobs:
         run: mypy --strict */*.py
       - name: Isort imports alphabetically, separated into sections and by type
         run: isort --check --diff --profile black */*.py
+      - name: Features used compatible with Python 3.6
+        run: vermin --violations --target=3.6 .
