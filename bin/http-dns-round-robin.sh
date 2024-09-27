@@ -28,6 +28,7 @@ required_command "dig" "for DNS queries"
 required_command "head"
 required_command "tail"
 required_command "awk"
+required_command "grep"
 
 if [ "$UNMET" -gt 0 ]; then
   exit 1
@@ -39,13 +40,32 @@ if ! [[ $URL =~ $regex ]]; then
   exit 1
 fi
 
+IPV4SEG="(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+IPV4ADDR="(${IPV4SEG}\.){3,3}${IPV4SEG}"
+IPV6SEG="[0-9a-fA-F]{1,4}"
+IPV6ADDR="("
+IPV6ADDR+="(${IPV6SEG}:){7,7}${IPV6SEG}|"
+IPV6ADDR+="(${IPV6SEG}:){1,7}:|"
+IPV6ADDR+="(${IPV6SEG}:){1,6}:${IPV6SEG}|"
+IPV6ADDR+="(${IPV6SEG}:){1,5}(:${IPV6SEG}){1,2}|"
+IPV6ADDR+="(${IPV6SEG}:){1,4}(:${IPV6SEG}){1,3}|"
+IPV6ADDR+="(${IPV6SEG}:){1,3}(:${IPV6SEG}){1,4}|"
+IPV6ADDR+="(${IPV6SEG}:){1,2}(:${IPV6SEG}){1,5}|"
+IPV6ADDR+="${IPV6SEG}:((:${IPV6SEG}){1,6})|"
+IPV6ADDR+=":((:${IPV6SEG}){1,7}|:)|"
+IPV6ADDR+="fe80:(:${IPV6SEG}){0,4}%[0-9a-zA-Z]{1,}|"
+IPV6ADDR+="::(ffff(:0{1,4}){0,1}:){0,1}${IPV4ADDR}|"
+IPV6ADDR+="(${IPV6SEG}:){1,4}:${IPV4ADDR}"
+IPV6ADDR+=")"
+IPADDR="${IPV4ADDR}|${IPV6ADDR}"
+
 HOSTNAME=$(echo "$URL" | awk -F/ '{print $3}')
 
 while read -r ip
 do
   echo "[${ip}]"
   curl --resolve "[${HOSTNAME}]:443:${ip}" --silent --head "$URL"
-done <<< "$( \
-  dig +short "$HOSTNAME" A | tail -n 1 \
-  ; dig +short "$HOSTNAME" AAAA | tail -n 1
+done <<< "$(
+  dig +short "$HOSTNAME" A | grep -E -o "$IPADDR"
+  dig +short "$HOSTNAME" AAAA | grep -E -o "$IPADDR"
 )"
