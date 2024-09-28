@@ -59,12 +59,24 @@ IPV6ADDR+="(${IPV6SEG}:){1,4}:${IPV4ADDR}"
 IPV6ADDR+=")"
 IPADDR="${IPV4ADDR}|${IPV6ADDR}"
 
-HOSTNAME=$(echo "$URL" | awk -F/ '{print $3}')
+PROTOCOL=$(echo "$URL" | awk -F/ '{print $1}')
+HOSTPORT=$(echo "$URL" | awk -F/ '{print $3}')
+if [[ $HOSTPORT =~ .*:[0-9]+ ]]; then
+  PORT="$(echo "$HOSTPORT" | awk -F: '{print $NF}')"
+  HOSTNAME="${HOSTPORT%":${PORT}"}"
+else
+  HOSTNAME="$HOSTPORT"
+  if [[ $PROTOCOL == 'https:' ]]; then
+    PORT=443
+  else
+    PORT=80
+  fi
+fi
 
 while read -r ip
 do
-  echo "[${ip}]"
-  curl --resolve "[${HOSTNAME}]:443:${ip}" --silent --head "$URL"
+  echo "[${ip}]:${PORT}"
+  curl --resolve "[${HOSTNAME}]:${PORT}:${ip}" --silent --head "$URL"
 done <<< "$(
   dig +short "$HOSTNAME" A | grep -E -o "$IPADDR"
   dig +short "$HOSTNAME" AAAA | grep -E -o "$IPADDR"
