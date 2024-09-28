@@ -76,7 +76,8 @@ fi
 while read -r ip
 do
   echo "[${ip}]:${PORT}"
-  curl --resolve "${HOSTNAME}:${PORT}:[${ip}]" --silent --head "$URL"
+  curl --resolve "${HOSTNAME}:${PORT}:[${ip}]" \
+    --no-progress-meter --head "$URL"
 done <<< "$(
   dig +short "$HOSTNAME" A | grep -E -o "$IPADDR"
   dig +short "$HOSTNAME" AAAA | grep -E -o "$IPADDR"
