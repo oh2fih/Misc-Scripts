@@ -14,6 +14,7 @@
 #   $SELECTOR   One or more comma-separated selector.
 #               Most CSS level 3 selectors are supported.
 #   $CACHE      Cache file path (for multiple instances).
+#   $USER_AGENT Fake User-Agent for curl; defaults to Google Chrome.
 #
 # If the element has a constantly changing part it can be found and replaced 
 # using extra environment variables:
@@ -33,8 +34,9 @@ CACHE="${CACHE:-.detect-modifier-html-element-sha512sum}"
 
 # Fake user-agent for curl
 
-UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-UA+="(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
+DEFAULT_UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+DEFAULT_UA+="(KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+UA="${USER_AGENT:-$DEFAULT_UA}"
 
 # Check for requirements. Print all unmet requirements at once.
 

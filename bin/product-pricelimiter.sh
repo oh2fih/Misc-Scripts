@@ -19,6 +19,10 @@ read -r -d '' USAGE << EOM
 #   1  ERROR  An error has occured; unable to tell the result.
 #   2  WAIT   Price is found but higher than the MaxPrice.
 #
+# Environment variables:
+#
+#   $USER_AGENT  Fake User-Agent for curl; defaults to Google Chrome.
+#
 # Requires html-xml-utils for parsing the HTML & curl for fetching the page.
 # It is recommended to have 'bc' installed for more accurate comparison.
 #
@@ -29,8 +33,9 @@ EOM
 
 # Fake user-agent for curl
 
-UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-UA+="(KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
+DEFAULT_UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+DEFAULT_UA+="(KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+UA="${USER_AGENT:-$DEFAULT_UA}"
 
 # Validate arguments
 
