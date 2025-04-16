@@ -32,6 +32,7 @@ Miscellaneous scripts for different purposes. Mostly unrelated to each other.
 | Automation | [`create-site.sh`](sbin/create-site.sh)<br>Shell (bash) | Web hosting automation for Debian with Apache2, PHP-FPM & Let's Encrypt.<br>`sudo create-site.sh username example.com [www.example.com ...]` |
 | Firewall | [`list2bans.sh`](sbin/list2bans.sh)<br>Shell (bash) | Lists all Fail2Ban jail statuses or jails banning an IP.<br>`sudo list2bans.sh [ip]` |
 | Firewall | [`unfail2ban.sh`](sbin/unfail2ban.sh)<br>Shell (bash) | Unbans the given IPs from all Fail2Ban jails.<br>`sudo unfail2ban.sh ip [ip ...]` |
+| Infosec | [`fake-bitlocker.sh`](sbin/fake-bitlocker.sh)<br>Shell (bash) | Dispose a disk by overwriting random data and create a fake BitLocker header.<br>`sudo fake-bitlocker.sh /dev/sdX [passes [label]]` |
 
 ## Install & update
 
