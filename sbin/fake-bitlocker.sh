@@ -37,6 +37,7 @@ required_command "sgdisk" "for writing the GPT partition table and partition lab
 required_command "printf" "for injecting the fake BitLocker signature"
 required_command "xxd" "for reading embedded fake header in hex"
 required_command "date" "for detecting dd failure type"
+required_command "tr"
 
 if [ "$UNMET" -gt 0 ]; then
   echo
@@ -94,7 +95,21 @@ else
   echo "==> Skipping overwrite as requested (0 passes)."
 fi
 
-# Step 2: Create GPT Partition
+# Step 2: Create GPT Partition with fake Microsoft style partition GUID
+
+generate_uuid_v4() {
+  if [[ -r /proc/sys/kernel/random/uuid ]]; then
+    cat /proc/sys/kernel/random/uuid && return 0
+  fi
+
+  # fallback using xxd + bash string manipulation
+  local raw
+  raw=$(xxd -l 16 -p /dev/urandom | tr -d '\n')
+  
+  # Insert version (4) and variant (a/b/8/9)
+  local uuid="${raw:0:8}-${raw:8:4}-4${raw:13:3}-a${raw:17:3}-${raw:20:12}"
+  echo "$uuid"
+}
 
 create_partition() {
   sgdisk --zap-all \
@@ -102,6 +117,7 @@ create_partition() {
     --new=1:0:0 \
     --typecode=1:0700 \
     --change-name=1:"$PARTITION_LABEL" \
+    --partition-guid=1:"$(generate_uuid_v4)" \
     "$DRIVE"
 }
 
