@@ -36,6 +36,7 @@ required_command "dd" "(GNU) for overwriting the drive and writing signatures"
 required_command "sgdisk" "for writing the GPT partition table and partition label"
 required_command "printf" "for injecting the fake BitLocker signature"
 required_command "xxd" "for reading embedded fake header in hex"
+required_command "date" "for detecting dd failure type"
 
 if [ "$UNMET" -gt 0 ]; then
   echo
@@ -79,11 +80,15 @@ read -rp "Are you absolutely sure you want to continue? [y/N] " CONFIRM
 if [[ "$OVERWRITE_PASSES" -gt 0 ]]; then
   for ((i=1; i<=OVERWRITE_PASSES; i++)); do
     echo "==> Overwriting pass $i/$OVERWRITE_PASSES..."
+    start_time=$(date +%s)
     # Note: 'status=progress' requires GNU dd
-    dd if=/dev/urandom of="$DRIVE" bs=4M status=progress || {
-      echo "==> Error during dd on pass $i" >&2
+    dd if=/dev/urandom of="$DRIVE" bs=4M status=progress
+    end_time=$(date +%s)
+    elapsed_time=$((end_time - start_time))
+    if [[ $elapsed_time -lt 20 ]]; then
+      echo "Error: dd exited way too quickly for a successful overwrite" >&2
       exit 1
-    }
+    fi
   done
 else
   echo "==> Skipping overwrite as requested (0 passes)."
