@@ -6,7 +6,7 @@ read -r -d '' USAGE << EOM
 # Usage: sudo fake-bitlocker.sh /dev/sdX [passes [label]]
 #
 #   /dev/sdX  Target drive to overwrite (e.g., /dev/sdb); REQUIRED
-#   passes    Number of overwrite passes with random data (default: 1, can be 0)
+#   passes    Number of overwrite passes with random data; default: 1, can be 0
 #   label     Label for the outer GPT partition; default: "Basic data partition"
 #
 # Note: If you want to set a custom partition label, you must also specify
@@ -97,15 +97,25 @@ fi
 
 # Step 2: Create GPT Partition with fake Microsoft style partition GUID
 
+echo "==> Zeroing the beginning of the disk before partitioning."
+dd if=/dev/zero of="$DRIVE" bs=512 count=2050 conv=notrunc status=progress
+
+if command -v wipefs &> /dev/null; then
+  echo "==> wipefs found; wiping possible existing partitions."
+  wipefs -a "$DRIVE"
+else
+  echo "==> (optional) wipefs not found; letting sgdisk do its best later."
+fi
+
 generate_uuid_v4() {
   if [[ -r /proc/sys/kernel/random/uuid ]]; then
     cat /proc/sys/kernel/random/uuid && return 0
   fi
 
-  # fallback using xxd + bash string manipulation
+  # Fallback using xxd & bash string manipulation
   local raw
   raw=$(xxd -l 16 -p /dev/urandom | tr -d '\n')
-  
+
   # Insert version (4) and variant (a/b/8/9)
   local uuid="${raw:0:8}-${raw:8:4}-4${raw:13:3}-a${raw:17:3}-${raw:20:12}"
   echo "$uuid"
@@ -123,12 +133,19 @@ create_partition() {
 
 echo "==> Creating GPT and partition table on $DRIVE..."
 create_partition || {
+  # Especially without the optional wipefs, the first try may fail
   echo "==> Error during partitioning; trying again!" >&2
   create_partition || {
     echo "==> Error: permanent error during partitioning" >&2
       exit 1
     }
   }
+
+echo "==> Ensuring backup GPT header on $DRIVE..."
+sgdisk --move-second-header "$DRIVE"
+
+echo "==> Final GPT headers on $DRIVE:"
+sgdisk --verify "$DRIVE"
 
 # Step 3: Inject fake BitLocker NTFS boot sector
 
@@ -149,7 +166,6 @@ a0fd7debe6cd16cd190000000000000000000000000000000000000000000000
 7878787878787878787878787878787878787878787878787878787878787878
 7878787878787878787878787878787878787878787878787878787878787878
 7878787878787878ffffffffffffffffffffffffffffffffffffff001f2c55aa
-b8c564d46982738e5534c60550799906
 EOM
 
 echo "==> Writing fake BitLocker NTFS boot sector to $DRIVE..."
