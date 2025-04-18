@@ -1,7 +1,16 @@
 #!/bin/bash
 read -r -d '' USAGE << EOM
 # ------------------------------------------------------------------------------
-# Overwrite disk with random data & spoof BitLocker encryption header
+# Overwrite disk with random data & inject a fake BitLocker header
+#
+# Creates a spoofed disk that appears to be BitLocker-encrypted at first glance.
+# Windows recognizes the partition as "Unknown (BitLocker Encrypted)", but does
+# not prompt for a password. Instead, it shows the error: "The BitLocker
+# encryption on this drive isn't compatible with your version of Windows.
+# Try opening the drive using a newer version of Windows." This mimics a
+# corrupted BitLocker volume and can appear convincing on casual inspection.
+# However, it is not a secure or forensic-level spoof — deeper analysis will
+# easily reveal that the disk is not structured like a real BitLocker volume.
 #
 # Usage: sudo fake-bitlocker.sh /dev/sdX [passes [label]]
 #
@@ -33,7 +42,7 @@ required_command() {
 
 UNMET=0
 required_command "dd" "(GNU) for overwriting the drive and writing signatures"
-required_command "sgdisk" "for writing the GPT partition table and partition label"
+required_command "sgdisk" "for writing the GPT partition table"
 required_command "printf" "for injecting the fake BitLocker signature"
 required_command "xxd" "for reading embedded fake header in hex"
 required_command "date" "for detecting dd failure type"
