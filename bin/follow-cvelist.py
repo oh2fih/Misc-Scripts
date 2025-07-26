@@ -685,7 +685,8 @@ if __name__ == "__main__":
         help="each -v increases verbosity (commits, git pull, raw data)",
         default=0,
     )
-    argParser.add_argument(
+    param_group = argParser.add_argument_group("parameters")
+    param_group.add_argument(
         "-i",
         "--interval",
         type=check_positive,
@@ -693,7 +694,7 @@ if __name__ == "__main__":
         help="pull/reload interval in seconds",
         default=150,
     )
-    argParser.add_argument(
+    param_group.add_argument(
         "-c",
         "--commits",
         type=check_positive,
@@ -701,14 +702,14 @@ if __name__ == "__main__":
         help="number of commits to print initially",
         default=30,
     )
-    argParser.add_argument(
+    param_group.add_argument(
         "-w",
         "--width",
         type=check_positive,
         metavar="N",
         help="overwrite autodetected terminal width (<50 => multiline)",
     )
-    argParser.add_argument(
+    param_group.add_argument(
         "-m",
         "--cvss-min",
         type=float,
