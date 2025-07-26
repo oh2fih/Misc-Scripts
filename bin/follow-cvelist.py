@@ -3,7 +3,7 @@
 # ------------------------------------------------------------------------------
 # Follow changes (commits) in CVEProject / cvelistV5
 #
-# Usage: follow-cvelist.py [-haForu4] [-vvvv] [-i s] [-c N] [-w N]
+# Usage: follow-cvelist.py [-haForu4] [-vvvv] [-i s] [-c N] [-w N] [-m f]
 #
 #  -h, --help          show this help message and exit
 #  -a, --ansi          add ansi colors to the output (default: False)
@@ -16,6 +16,7 @@
 #  -i s, --interval s  pull interval in seconds (default: 150)
 #  -c N, --commits N   number of commits to print initially (default: 30)
 #  -w N, --width N     overwrite autodetected terminal width (<50 => multiline)
+#  -m f, --cvss-min f  minimum cvss score; skip lower values (default: None)
 #
 # Requires git. Working directory must be the root of the cvelistV5 repository.
 #
@@ -285,6 +286,7 @@ class CvelistFollower:
     ) -> List[Dict[str, str]]:
         """Return changes in CVEs between two commits"""
         changes = []
+        skipped = 0
         for file in self.changed_files(current_commit, past_commit):
             type = re.split(r"\t+", file.decode("utf-8").strip())[0]
             path = Path(re.split(r"\t+", file.decode("utf-8").strip())[1])
@@ -333,6 +335,15 @@ class CvelistFollower:
             else:
                 current_cvss = self.cvss31score(current)
 
+            if args.cvss_min:
+                try:
+                    if float(current_cvss) < args.cvss_min:
+                        skipped += 1
+                        continue
+                except (TypeError, ValueError):
+                    skipped += 1
+                    continue
+
             change = {
                 "type": type,
                 "modified": modified,
@@ -344,6 +355,11 @@ class CvelistFollower:
             if self.args.verbose > 2:
                 print(f"[change] {change}", file=sys.stderr)
             changes.append(change)
+
+        if args.cvss_min and args.verbose > 0 and skipped > 0:
+            print(
+                f"Skipped {skipped} CVEs with CVSS < {args.cvss_min}", file=sys.stderr
+            )
         return changes
 
     def format_line(self, line: Dict[str, Any]) -> str:
@@ -615,7 +631,7 @@ def check_positive(value: str) -> int:
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser(
         description="Follow changes (commits) in CVEProject / cvelistV5",
-        usage="%(prog)s [-haForu4] [-vvvv] [-i s] [-c N] [-w N]",
+        usage="%(prog)s [-haForu4] [-vvvv] [-i s] [-c N] [-w N] [-m f]",
         epilog="Requires git. "
         "Working directory must be the root of the cvelistV5 repository.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -692,15 +708,30 @@ if __name__ == "__main__":
         metavar="N",
         help="overwrite autodetected terminal width (<50 => multiline)",
     )
+    argParser.add_argument(
+        "-m",
+        "--cvss-min",
+        type=float,
+        metavar="f",
+        help="minimum cvss score; skip lower values",
+    )
     args = argParser.parse_args()
     if args.verbose > 4:
         args.verbose = 4
-    verbosity = {
-        4: "raw json, raw changes, git pulls, commit ID",
-        3: "raw changes, git pulls, commit IDs",
-        2: "git pulls, commit IDs",
-        1: "commit IDs",
-    }
+    if args.cvss_min:
+        verbosity = {
+            4: "raw json, raw changes, git pulls, commit ID, skipped CVEs",
+            3: "raw changes, git pulls, commit IDs, skipped CVEs",
+            2: "git pulls, commit IDs, skipped CVEs",
+            1: "commit IDs, skipped CVEs",
+        }
+    else:
+        verbosity = {
+            4: "raw json, raw changes, git pulls, commit ID",
+            3: "raw changes, git pulls, commit IDs",
+            2: "git pulls, commit IDs",
+            1: "commit IDs",
+        }
     if args.verbose > 0:
         print(f"VERBOSITY: {verbosity[args.verbose]}", file=sys.stderr)
     if args.reload_only:
