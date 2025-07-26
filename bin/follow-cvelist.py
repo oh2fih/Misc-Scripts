@@ -476,8 +476,8 @@ class CvelistFollower:
         except KeyError:
             try:
                 for description in cve["containers"]["cna"]["descriptions"]:
-                    if description["lang"] in ["en", "en-US", "en_US"]:  # type: ignore
-                        description = description["value"]  # type: ignore
+                    if description["lang"] in ["en", "en-US", "en_US"]:
+                        description = description["value"]
                         title = ""
                         break
             except KeyError:
