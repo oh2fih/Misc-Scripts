@@ -101,12 +101,7 @@ fi
 
 # Get URLs for the Subordinate (Intermediate) CAs, including backups
 
-if (( SELECTOR == 1 )); then
-  # cross-signed certificates have the same public key
-  REGEX="/certs/[0-9]+/[0-9a-zA-Z]+.pem"
-else
-  REGEX="/certs/[0-9]+/[0-9a-zA-Z]+(-cross)?.pem"
-fi
+REGEX="/certs/[A-Za-z0-9/_-]+\.pem"
 
 INTERMEDIATE_PATHS=$(
   curl --silent "${BASE_URL}${SOURCE}" \
