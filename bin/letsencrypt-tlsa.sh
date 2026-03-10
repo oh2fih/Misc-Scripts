@@ -107,7 +107,8 @@ INTERMEDIATE_PATHS=$(
   curl --silent "${BASE_URL}${SOURCE}" \
     | sed '/subordinate-intermediate-cas/d' \
     | sed '/.summary.Retired..summary./q' \
-    | grep -oE "$REGEX"
+    | grep -oE "$REGEX" \
+    | grep -v 'root'
   )
 
 if [ "$INTERMEDIATE_PATHS" = "" ]; then
