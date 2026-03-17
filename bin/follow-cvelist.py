@@ -171,52 +171,46 @@ class CvelistFollower:
         result = subprocess.run(
             ["git", "pull"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        if self.args.verbose > 1:
+        stdout = result.stdout.decode("utf-8", errors="replace").strip()
+        stderr = result.stderr.decode("utf-8", errors="replace").strip()
+        if self.args.verbose > 1 and stdout:
             print(
-                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
-                f"{result.stdout.decode('utf-8').strip()}",
+                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  {stdout}",
                 file=sys.stderr,
             )
-        if result.returncode > 0:
-            if self.fetch_all():
-                if self.args.force:
-                    if self.args.verbose > 1:
-                        print(
-                            f"{result.stderr.decode('utf-8').strip()}",
-                            file=sys.stderr,
-                        )
-                    self.reset_repo()
-                else:
-                    print(
-                        f"{result.stderr.decode('utf-8').strip()}",
-                        file=sys.stderr,
-                    )
-                    begin = f"{ANSI.code('red')}" if self.args.ansi else ""
-                    end = f"{ANSI.code('end')}" if self.args.ansi else ""
-                    print(
-                        f"{begin}Manual intervention (or -F/--force) "
-                        f"required; 'git pull' failed permanently!{end}",
-                        file=sys.stderr,
-                    )
-                    sys.exit(1)
+        if self.permanent_git_error(result.returncode, stderr):
+            if self.args.force:
+                self.reset_repo()
+            else:
+                begin = f"{ANSI.code('red')}" if self.args.ansi else ""
+                end = f"{ANSI.code('end')}" if self.args.ansi else ""
+                print(
+                    f"{begin}Manual intervention (or -F/--force) "
+                    f"required; 'git pull' failed permanently!{end}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
 
-    def fetch_all(self) -> bool:
-        """Try fetch; good for distinguishing connectivity issues from other failures"""
-        result = subprocess.run(
-            ["git", "fetch", "--all"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
+    def permanent_git_error(self, returncode: int, stderr: str) -> bool:
+        """Tries to detect permanent git errors that might require a repository reset"""
+        if returncode == 0:
+            return False
         if self.args.verbose > 1:
-            print(f"{result.stdout.decode('utf-8').strip()}", file=sys.stderr)
-        if result.returncode > 0:
-            begin = f"{ANSI.code('yellow')}" if self.args.ansi else ""
+            begin = f"{ANSI.code('red')}" if self.args.ansi else ""
             end = f"{ANSI.code('end')}" if self.args.ansi else ""
             print(
-                f"{begin}{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
-                f"Fetch failed; connectivity issues?{end}",
+                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
+                f"{begin}{stderr}{end}",
                 file=sys.stderr,
             )
-            return False  # fetch failed
-        return True  # fetch successful
+        permanent_repository_error_markers = [
+            "non-fast-forward",
+            "would be overwritten",
+            "merge failed",
+            "refusing to merge",
+            "not possible to fast-forward",
+        ]
+        return any(m in stderr for m in permanent_repository_error_markers)
 
     def reset_repo(self) -> None:
         """Tries to recover from git pull errors by hard resetting to origin/main"""
