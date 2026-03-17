@@ -199,8 +199,7 @@ class CvelistFollower:
             begin = f"{ANSI.code('red')}" if self.args.ansi else ""
             end = f"{ANSI.code('end')}" if self.args.ansi else ""
             print(
-                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
-                f"{begin}{stderr}{end}",
+                f"{timestamp()}{begin}{stderr}{end}",
                 file=sys.stderr,
             )
         permanent_repository_error_markers = [
@@ -232,22 +231,19 @@ class CvelistFollower:
             )
         except subprocess.CalledProcessError:
             print(
-                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
-                f"{red}Cannot determine current branch; manual intervention required!{end}",
+                f"{timestamp()}{red}Cannot determine current branch; manual intervention required!{end}",
                 file=sys.stderr,
             )
             sys.exit(1)
         if current_branch != "main":
             print(
-                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
-                f"{red}Current branch is '{current_branch}', not 'main'; "
+                f"{timestamp()}{red}Current branch is '{current_branch}', not 'main'; "
                 f"manual intervention required!{end}",
                 file=sys.stderr,
             )
             sys.exit(1)
         print(
-            f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
-            f"{yellow}Recovering main branch from failed pull...{end}",
+            f"{timestamp()}{yellow}Recovering main branch from failed pull...{end}",
             file=sys.stderr,
         )
         result = subprocess.run(
@@ -261,14 +257,12 @@ class CvelistFollower:
             )
         if result.returncode > 0:
             print(
-                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
-                f"{red}Hard reset to origin/main failed; manual intervention required!{end}",
+                f"{timestamp()}{red}Hard reset to origin/main failed; manual intervention required!{end}",
                 file=sys.stderr,
             )
             sys.exit(1)
         print(
-            f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
-            f"{green}Successfully recovered main.{end}",
+            f"{timestamp()}{green}Successfully recovered main.{end}",
             file=sys.stderr,
         )
 
@@ -644,6 +638,11 @@ class ANSI:
             return ansi[color.lower()]
         else:
             return ansi["end"]
+
+
+def timestamp(spacing: int = 2) -> str:
+    """Return the current UTC timestamp with configurable trailing spaces."""
+    return f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}{' ' * spacing}"
 
 
 def check_positive(value: str) -> int:
