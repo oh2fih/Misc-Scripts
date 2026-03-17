@@ -209,16 +209,45 @@ class CvelistFollower:
             "merge failed",
             "refusing to merge",
             "not possible to fast-forward",
+            "divergent branches",
         ]
         return any(m in stderr for m in permanent_repository_error_markers)
 
     def reset_repo(self) -> None:
         """Tries to recover from git pull errors by hard resetting to origin/main"""
-        begin = f"{ANSI.code('yellow')}" if self.args.ansi else ""
+        yellow = f"{ANSI.code('yellow')}" if self.args.ansi else ""
+        red = f"{ANSI.code('red')}" if self.args.ansi else ""
+        green = f"{ANSI.code('green')}" if self.args.ansi else ""
         end = f"{ANSI.code('end')}" if self.args.ansi else ""
+        try:
+            current_branch = (
+                subprocess.run(
+                    ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=True,
+                )
+                .stdout.decode("utf-8", errors="replace")
+                .strip()
+            )
+        except subprocess.CalledProcessError:
+            print(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
+                f"{red}Cannot determine current branch; manual intervention required!{end}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        if current_branch != "main":
+            print(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
+                f"{red}Current branch is '{current_branch}', not 'main'; "
+                f"manual intervention required!{end}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         print(
-            f"{begin}{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}"
-            f"  Recovering from a failed git pull...{end}",
+            f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
+            f"{yellow}Recovering main branch from failed pull...{end}",
             file=sys.stderr,
         )
         result = subprocess.run(
@@ -227,19 +256,21 @@ class CvelistFollower:
             stderr=subprocess.STDOUT,
         )
         if self.args.verbose > 1:
-            print(f"{result.stdout.decode('utf-8').strip()}", file=sys.stderr)
-        if result.returncode > 0:
-            begin = f"{ANSI.code('red')}" if self.args.ansi else ""
-            end = f"{ANSI.code('end')}" if self.args.ansi else ""
             print(
-                f"{begin}Hard reset to origin/main failed; "
-                f"manual intervention required!{end}",
+                result.stdout.decode("utf-8", errors="replace").strip(), file=sys.stderr
+            )
+        if result.returncode > 0:
+            print(
+                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
+                f"{red}Hard reset to origin/main failed; manual intervention required!{end}",
                 file=sys.stderr,
             )
             sys.exit(1)
-        begin = f"{ANSI.code('green')}" if self.args.ansi else ""
-        end = f"{ANSI.code('end')}" if self.args.ansi else ""
-        print(f"{begin}Successfully recovered.{end}", file=sys.stderr)
+        print(
+            f"{time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime())}  "
+            f"{green}Successfully recovered main.{end}",
+            file=sys.stderr,
+        )
 
     def get_cursor(self, offset: int = 0) -> str:
         """Gets commit id at the offset from the current head"""
